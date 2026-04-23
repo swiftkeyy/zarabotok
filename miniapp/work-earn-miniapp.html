@@ -912,9 +912,30 @@
 
         function showUserMenu() {
             // Получаем данные пользователя из Telegram WebApp
+            console.log('Telegram WebApp data:', tg?.initDataUnsafe);
+            
             const tgUser = tg?.initDataUnsafe?.user;
-            const userName = tgUser?.first_name || tgUser?.username || 'Пользователь';
-            const userId = tgUser?.id || 'N/A';
+            let userName = 'Пользователь';
+            let userId = 'N/A';
+            
+            // Пробуем разные способы получить данные
+            if (tgUser) {
+                userName = tgUser.first_name || tgUser.username || 'Пользователь';
+                userId = tgUser.id || 'N/A';
+            } else if (tg?.initData) {
+                // Пробуем распарсить initData вручную
+                try {
+                    const params = new URLSearchParams(tg.initData);
+                    const userStr = params.get('user');
+                    if (userStr) {
+                        const user = JSON.parse(userStr);
+                        userName = user.first_name || user.username || 'Пользователь';
+                        userId = user.id || 'N/A';
+                    }
+                } catch (e) {
+                    console.error('Parse error:', e);
+                }
+            }
             
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5';
