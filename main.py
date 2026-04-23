@@ -26,6 +26,7 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from openpyxl import Workbook
+from aiohttp import web
 
 # ================== НАСТРОЙКИ ==================
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
@@ -633,13 +634,60 @@ async def handle_webapp_data(message: Message):
         logger.error(f"web_app_data: {e}")
         await message.answer("❌ Ошибка.")
 
+# ================== API ДЛЯ MINI APP ==================
+async def api_get_user_data(request):
+    """API endpoint для получения данных пользователя"""
+    try:
+        user_id = int(request.match_info.get('user_id'))
+        
+        if USE_POSTGRES:
+            async with DB_POOL.acquire() as conn:
+                user = await conn.fetchrow("SELECT user_id, first_name FROM users WHERE user_id = $1", user_id)
+                if not user:
+                    return web.json_response({"error": "User not found"}, status=404)
+                
+                stats = await conn.fetch("SELECT month, work_days, earnings FROM stats WHERE user_id = $1 ORDER BY saved_at DESC", user_id)
+                saved_months = len(stats)
+                total_earnings = sum(s['earnings'] for s in stats)
+        else:
+            async with aiosqlite.connect(DB_PATH) as db:
+                cursor = await db.execute("SELECT user_id, first_name FROM users WHERE user_id = ?", (user_id,))
+                user = await cursor.fetchone()
+                if not user:
+                    return web.json_response({"error": "User not found"}, status=404)
+                
+                cursor = await db.execute("SELECT month, work_days, earnings FROM stats WHERE user_id = ? ORDER BY saved_at DESC", (user_id,))
+                stats = await cursor.fetchall()
+                saved_months = len(stats)
+                total_earnings = sum(s[2] for s in stats)
+        
+        return web.json_response({
+            "user_id": user_id,
+            "first_name": user[1] if USE_POSTGRES else user[1],
+            "saved_months": saved_months,
+            "total_earnings": total_earnings
+        })
+    except Exception as e:
+        logger.error(f"API error: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
 # ================== ЗАПУСК ==================
 async def main():
     global DB_POOL
     
     await init_db()
     setup_scheduler()
+    
+    # Создаем API сервер
+    app = web.Application()
+    app.router.add_get('/api/user/{user_id}', api_get_user_data)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 8080)
+    await site.start()
+    
     logger.info(f"🚀 Бот запущен на {logger_msg}")
+    logger.info("🌐 API сервер запущен на порту 8080")
     
     try:
         await dp.start_polling(bot)
@@ -647,6 +695,7 @@ async def main():
         if USE_POSTGRES and DB_POOL:
             await DB_POOL.close()
             logger.info("🐘 PostgreSQL pool closed")
+        await runner.cleanup()
 
 if __name__ == "__main__":
     try:

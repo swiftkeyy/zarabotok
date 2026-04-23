@@ -937,6 +937,38 @@
                 }
             }
             
+            // Если данные не получены из Telegram, пробуем получить из API
+            if (userId === 'N/A' || userId === null) {
+                // Показываем модалку с загрузкой
+                showUserMenuModal(userName, userId, Object.keys(monthlyData).length, 
+                    Object.values(monthlyData).reduce((sum, m) => sum + (m.earnings || 0), 0));
+                
+                // Пробуем получить данные из API (если пользователь уже взаимодействовал с ботом)
+                // Для этого нужен user_id, который можно получить из localStorage или другого источника
+                const savedUserId = localStorage.getItem('telegram_user_id');
+                if (savedUserId) {
+                    fetch(`https://zarabotok-production.up.railway.app/api/user/${savedUserId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.user_id) {
+                                userName = data.first_name;
+                                userId = data.user_id;
+                                // Обновляем модалку с реальными данными
+                                document.querySelector('.fixed')?.remove();
+                                showUserMenuModal(userName, userId, data.saved_months, data.total_earnings);
+                            }
+                        })
+                        .catch(err => console.error('API error:', err));
+                }
+            } else {
+                // Сохраняем user_id для будущих запросов
+                localStorage.setItem('telegram_user_id', userId);
+                showUserMenuModal(userName, userId, Object.keys(monthlyData).length, 
+                    Object.values(monthlyData).reduce((sum, m) => sum + (m.earnings || 0), 0));
+            }
+        }
+        
+        function showUserMenuModal(userName, userId, savedMonths, totalEarnings) {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5';
             modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
@@ -961,11 +993,11 @@
                     <div class="space-y-2">
                         <div class="bg-zinc-800 rounded-2xl p-3 flex items-center justify-between text-sm">
                             <span>📊 Сохранено месяцев</span>
-                            <span class="font-semibold">${Object.keys(monthlyData).length}</span>
+                            <span class="font-semibold">${savedMonths}</span>
                         </div>
                         <div class="bg-zinc-800 rounded-2xl p-3 flex items-center justify-between text-sm">
                             <span>💰 Всего заработано</span>
-                            <span class="font-semibold text-emerald-400">${Object.values(monthlyData).reduce((sum, m) => sum + (m.earnings || 0), 0).toLocaleString('ru-RU')} ₽</span>
+                            <span class="font-semibold text-emerald-400">${totalEarnings.toLocaleString('ru-RU')} ₽</span>
                         </div>
                     </div>
                     
