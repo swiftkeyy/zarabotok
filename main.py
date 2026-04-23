@@ -375,8 +375,8 @@ async def send_monthly_reminder():
                 InlineKeyboardButton(text="📅 Открыть календарь", web_app=WebAppInfo(url=WEBAPP_URL))
             ]]))
             await asyncio.sleep(0.08)
-        except: pass
-        except: pass
+        except: 
+            pass
 
 def setup_scheduler():
     scheduler.add_job(send_monthly_reminder, trigger="cron", day=1, hour=10, minute=0, timezone="Europe/Moscow")
