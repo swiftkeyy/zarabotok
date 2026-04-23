@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>💰 Календарь Заработка • Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+        
+        :root {
+            --accent: #10b981;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            font-weight: 600;
+        }
+
+        .day-cell {
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .day-cell.work {
+            background-color: #10b981;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgb(16 185 129 / 0.3);
+        }
+        
+        .day-cell:hover:not(.work) {
+            background-color: #27272a;
+            transform: scale(0.95);
+        }
+        
+        .day-cell:active {
+            transform: scale(0.9);
+        }
+        
+        .calendar-grid {
+            gap: 6px;
+        }
+
+        .stat-card {
+            transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .mini-app {
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+        }
+
+        .tg-header {
+            background: linear-gradient(to right, #18181b, #27272a);
+        }
+
+        .money {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .confetti {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            font-size: 22px;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(120vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .tab-active {
+            border-bottom: 3px solid #10b981;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .month-label {
+            transition: all 0.2s ease;
+        }
+
+        .month-label:hover {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200">
+    <!-- Phone frame -->
+    <div class="max-w-[420px] mx-auto min-h-screen bg-zinc-900 shadow-2xl overflow-hidden flex flex-col mini-app">
+        
+        <!-- Header -->
+        <div class="tg-header px-5 py-4 flex items-center justify-between border-b border-zinc-800">
+            <div class="flex items-center gap-x-3">
+                <div class="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <span class="text-3xl">💼</span>
+                </div>
+                <div>
+                    <div class="font-display text-2xl font-semibold tracking-tighter">Заработок</div>
+                    <div class="text-[10px] text-emerald-400 -mt-1">TELEGRAM MINI APP</div>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-x-1.5">
+                <button onclick="toggleTheme()" 
+                        class="flex items-center justify-center w-9 h-9 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors text-lg"
+                        id="theme-toggle">
+                    🌙
+                </button>
+                <button onclick="showUserMenu()" 
+                        class="flex items-center justify-center w-9 h-9 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">
+                    <span class="text-xl">👤</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-zinc-800 bg-zinc-900">
+            <div onclick="switchTab(0)" id="tab0"
+                 class="tab-btn flex-1 py-[13px] text-center text-sm font-semibold cursor-pointer border-b-[3px] border-emerald-500 text-emerald-400">
+                📅 Календарь
+            </div>
+            <div onclick="switchTab(1)" id="tab1"
+                 class="tab-btn flex-1 py-[13px] text-center text-sm font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300">
+                📊 Статистика
+            </div>
+            <div onclick="switchTab(2)" id="tab2"
+                 class="tab-btn flex-1 py-[13px] text-center text-sm font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300">
+                🗂️ История
+            </div>
+        </div>
+
+        <!-- CALENDAR TAB -->
+        <div id="content0" class="flex-1 flex flex-col">
+            <!-- Month navigation -->
+            <div class="px-5 pt-5 pb-2 flex items-center justify-between">
+                <button onclick="prevMonth()" 
+                        class="w-10 h-10 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-2xl text-xl transition-all active:scale-95">
+                    ←
+                </button>
+                
+                <div onclick="showMonthPicker()" 
+                     class="month-label px-5 py-1.5 text-center cursor-pointer">
+                    <div id="month-label" class="font-display text-2xl font-semibold tracking-tight">Апрель 2026</div>
+                    <div class="text-[10px] text-zinc-500 -mt-0.5">нажмите для выбора</div>
+                </div>
+                
+                <button onclick="nextMonth()" 
+                        class="w-10 h-10 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-2xl text-xl transition-all active:scale-95">
+                    →
+                </button>
+            </div>
+
+            <!-- Weekdays -->
+            <div class="px-5 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-500 mb-1">
+                <div>Пн</div>
+                <div>Вт</div>
+                <div>Ср</div>
+                <div>Чт</div>
+                <div>Пт</div>
+                <div class="text-rose-400">Сб</div>
+                <div class="text-rose-400">Вс</div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="px-5">
+                <div id="calendar-grid" 
+                     class="grid grid-cols-7 gap-[6px] calendar-grid bg-zinc-950 p-2 rounded-3xl">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="px-5 mt-4 flex items-center justify-center gap-x-5 text-xs">
+                <div class="flex items-center gap-x-2">
+                    <div class="w-3.5 h-3.5 bg-emerald-500 rounded-xl"></div>
+                    <span class="text-zinc-400">Рабочий день</span>
+                </div>
+                <div class="flex items-center gap-x-2">
+                    <div class="w-3.5 h-3.5 bg-zinc-700 rounded-xl"></div>
+                    <span class="text-zinc-400">Отдых</span>
+                </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="px-5 mt-4 grid grid-cols-3 gap-2">
+                <button onclick="fillWeekdays()" 
+                        class="py-2.5 text-xs font-medium bg-zinc-800 hover:bg-emerald-900/60 active:bg-emerald-800 rounded-2xl flex items-center justify-center gap-x-1.5 transition-all">
+                    <span>📆</span>
+                    <span>Пн–Пт</span>
+                </button>
+                <button onclick="clearAll()" 
+                        class="py-2.5 text-xs font-medium bg-zinc-800 hover:bg-rose-900/60 active:bg-rose-800 rounded-2xl flex items-center justify-center gap-x-1.5 transition-all">
+                    <span>🗑️</span>
+                    <span>Очистить</span>
+                </button>
+                <button onclick="randomPlan()" 
+                        class="py-2.5 text-xs font-medium bg-zinc-800 hover:bg-amber-900/60 active:bg-amber-800 rounded-2xl flex items-center justify-center gap-x-1.5 transition-all">
+                    <span>🎲</span>
+                    <span>Случайно</span>
+                </button>
+            </div>
+
+            <div class="flex-1"></div>
+        </div>
+
+        <!-- STATISTICS TAB -->
+        <div id="content1" class="hidden flex-1 overflow-auto p-5 space-y-5">
+            <!-- Goal -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="flex items-end justify-between mb-3">
+                    <div>
+                        <div class="uppercase tracking-[1px] text-xs text-zinc-400">ЦЕЛЬ НА МЕСЯЦ</div>
+                        <div class="flex items-baseline gap-x-1 mt-1">
+                            <input type="number" id="goal-input" value="150000" 
+                                   class="bg-transparent font-display text-4xl font-semibold w-[130px] focus:outline-none money"
+                                   onchange="updateGoal()">
+                            <span class="text-3xl text-zinc-400">₽</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div id="progress-text" 
+                             class="font-display text-5xl font-bold text-emerald-400 tabular-nums">67%</div>
+                    </div>
+                </div>
+                
+                <div class="h-2.5 bg-zinc-700 rounded-full overflow-hidden">
+                    <div id="progress-bar" 
+                         class="h-2.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-full transition-all duration-500"
+                         style="width: 67%"></div>
+                </div>
+                <div class="text-right text-[10px] text-zinc-500 mt-1">Прогресс к цели</div>
+            </div>
+
+            <!-- Main numbers -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="stat-card bg-zinc-800 rounded-3xl p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-zinc-400">РАБОЧИХ ДНЕЙ</div>
+                            <div id="work-days" class="font-display text-[42px] font-bold leading-none mt-1 tabular-nums">18</div>
+                            <div class="text-emerald-400 text-sm -mt-1">из <span id="total-days">30</span></div>
+                        </div>
+                        <div class="text-5xl opacity-20">📅</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card bg-zinc-800 rounded-3xl p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-zinc-400">ЗАРАБОТОК</div>
+                            <div id="earnings" class="font-display text-[42px] font-bold leading-none mt-1 text-emerald-400 tabular-nums money">90 000</div>
+                            <div class="text-xs text-emerald-400/70">₽ за месяц</div>
+                        </div>
+                        <div class="text-5xl opacity-20">💵</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rest + Passive -->
+            <div class="bg-zinc-800 rounded-3xl p-5 space-y-3">
+                <div class="flex justify-between items-center text-sm">
+                    <div class="flex items-center gap-x-2">
+                        <span class="text-xl">🛋️</span>
+                        <span>Дней отдыха</span>
+                    </div>
+                    <span id="rest-days" class="font-semibold tabular-nums">12</span>
+                </div>
+                
+                <div class="flex justify-between items-center text-sm">
+                    <div class="flex items-center gap-x-2">
+                        <span class="text-xl">🌙</span>
+                        <span>Пассивный доход</span>
+                    </div>
+                    <span id="passive-earnings" class="font-semibold tabular-nums text-amber-400">0 ₽</span>
+                </div>
+            </div>
+
+            <!-- Streak -->
+            <div class="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/30 rounded-3xl p-5 flex items-center gap-x-4">
+                <div class="text-6xl drop-shadow">🔥</div>
+                <div class="flex-1">
+                    <div class="uppercase text-xs tracking-[1.5px] text-orange-400 font-medium">ТЕКУЩАЯ СЕРИЯ</div>
+                    <div id="streak-text" class="font-display text-3xl font-bold text-orange-300">12 дней подряд</div>
+                    <div class="text-xs text-orange-400/60">Не останавливайся!</div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <div>
+                        <div class="font-semibold">Динамика за 6 месяцев</div>
+                        <div class="text-xs text-zinc-400">Заработок по месяцам</div>
+                    </div>
+                    <div class="text-emerald-400 text-xs">📈</div>
+                </div>
+                <canvas id="earnings-chart" class="w-full h-[140px]"></canvas>
+            </div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="content2" class="hidden flex-1 overflow-auto p-5">
+            <div class="mb-4 flex items-center justify-between">
+                <div class="font-semibold">Сохранённые месяцы</div>
+                <div onclick="clearAllData()" class="text-xs px-3 py-1 bg-zinc-800 rounded-2xl cursor-pointer hover:bg-rose-900/50">🗑️ Очистить всё</div>
+            </div>
+            
+            <div id="history-list" class="space-y-2.5">
+                <!-- Populated by JS -->
+            </div>
+            
+            <div class="mt-8 text-center">
+                <div class="inline-flex items-center gap-x-2 text-xs text-zinc-500">
+                    <div class="w-px h-3 bg-zinc-700"></div>
+                    Данные хранятся только в вашем браузере
+                    <div class="w-px h-3 bg-zinc-700"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom controls -->
+        <div class="border-t border-zinc-800 bg-zinc-950 px-5 py-4">
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <!-- Rate -->
+                <div>
+                    <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">СТАВКА ЗА РАБОЧИЙ ДЕНЬ</div>
+                    <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-1">
+                        <input type="number" id="rate-input" value="5000" 
+                               class="flex-1 bg-transparent text-2xl font-semibold focus:outline-none money" 
+                               onchange="updateRate()">
+                        <span class="text-xl text-zinc-400">₽</span>
+                    </div>
+                </div>
+                
+                <!-- Passive -->
+                <div>
+                    <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">ДОХОД В ДЕНЬ ОТДЫХА</div>
+                    <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-1">
+                        <input type="number" id="passive-input" value="0" 
+                               class="flex-1 bg-transparent text-2xl font-semibold focus:outline-none money" 
+                               onchange="updatePassive()">
+                        <span class="text-xl text-zinc-400">₽</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="saveMonth()" 
+                    class="w-full py-[15px] bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 active:scale-[0.985] transition-all text-white font-semibold text-base rounded-3xl flex items-center justify-center gap-x-2 shadow-lg shadow-emerald-500/30">
+                <span>💾</span>
+                <span>Сохранить этот месяц</span>
+            </button>
+            
+            <!-- Новая кнопка: отправка статистики в бот -->
+            <button onclick="sendStatsToBot()" 
+                    class="mt-2 w-full py-3 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-white font-medium text-sm rounded-3xl flex items-center justify-center gap-x-2 transition-all border border-zinc-700">
+                <span>📤</span>
+                <span>Отправить статистику в бот</span>
+            </button>
+            
+            <div class="text-center mt-2">
+                <div class="text-[9px] text-zinc-500">Готово к использованию в Telegram • Данные локальные</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50"></div>
+
+    <script>
+        // Global state
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        let workDaysSet = new Set();
+        let dailyRate = 5000;
+        let passiveRate = 0;
+        let monthlyGoal = 150000;
+        let monthlyData = {};
+        let chartInstance = null;
+
+        // Initialize Telegram WebApp
+        let tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        function getMonthKey(year = currentYear, month = currentMonth) {
+            return `${year}-${String(month + 1).padStart(2, '0')}`;
+        }
+
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem('workEarnData_v2');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    monthlyData = parsed.monthlyData || {};
+                    dailyRate = parsed.dailyRate || 5000;
+                    passiveRate = parsed.passiveRate || 0;
+                    monthlyGoal = parsed.monthlyGoal || 150000;
+                }
+                
+                const key = getMonthKey();
+                if (monthlyData[key]) {
+                    workDaysSet = new Set(monthlyData[key].workDays || []);
+                    dailyRate = monthlyData[key].rate || dailyRate;
+                    passiveRate = monthlyData[key].passiveRate || passiveRate;
+                } else {
+                    workDaysSet = new Set();
+                }
+                
+                const rateInput = document.getElementById('rate-input');
+                const passiveInput = document.getElementById('passive-input');
+                const goalInput = document.getElementById('goal-input');
+                
+                if (rateInput) rateInput.value = dailyRate;
+                if (passiveInput) passiveInput.value = passiveRate;
+                if (goalInput) goalInput.value = monthlyGoal;
+            } catch (e) {
+                console.error('Storage error:', e);
+                monthlyData = {};
+                workDaysSet = new Set();
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                const key = getMonthKey();
+                const earnings = calculateEarnings();
+                
+                monthlyData[key] = {
+                    rate: dailyRate,
+                    passiveRate: passiveRate,
+                    workDays: Array.from(workDaysSet),
+                    earnings: earnings,
+                    savedAt: new Date().toISOString()
+                };
+                
+                localStorage.setItem('workEarnData_v2', JSON.stringify({
+                    monthlyData: monthlyData,
+                    dailyRate: dailyRate,
+                    passiveRate: passiveRate,
+                    monthlyGoal: monthlyGoal
+                }));
+            } catch (e) {
+                console.error('Save error:', e);
+            }
+        }
+
+        function calculateEarnings() {
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const workCount = workDaysSet.size;
+            const restCount = daysInMonth - workCount;
+            return (workCount * dailyRate) + (restCount * passiveRate);
+        }
+
+        function updateStats() {
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const workCount = workDaysSet.size;
+            const restCount = daysInMonth - workCount;
+            const earnings = calculateEarnings();
+            
+            const workEl = document.getElementById('work-days');
+            const earningsEl = document.getElementById('earnings');
+            const restEl = document.getElementById('rest-days');
+            const passiveEl = document.getElementById('passive-earnings');
+            const totalDaysEl = document.getElementById('total-days');
+            
+            if (workEl) workEl.innerHTML = `${workCount}<span class="text-base font-normal text-zinc-400">/${daysInMonth}</span>`;
+            if (earningsEl) earningsEl.innerHTML = earnings.toLocaleString('ru-RU');
+            if (restEl) restEl.innerHTML = restCount;
+            if (passiveEl) passiveEl.innerHTML = (restCount * passiveRate).toLocaleString('ru-RU') + ' ₽';
+            if (totalDaysEl) totalDaysEl.innerHTML = daysInMonth;
+            
+            const progress = Math.min(Math.round((earnings / monthlyGoal) * 100), 100);
+            const bar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            
+            if (bar) bar.style.width = `${progress}%`;
+            if (progressText) {
+                progressText.innerHTML = `${progress}%`;
+                if (progress >= 100) {
+                    progressText.classList.add('!text-emerald-300', 'animate-pulse');
+                } else {
+                    progressText.classList.remove('!text-emerald-300', 'animate-pulse');
+                }
+            }
+            
+            updateStreakDisplay();
+            
+            if (progress >= 100 && earnings > 0) {
+                setTimeout(() => {
+                    if (!document.getElementById('progress-text').classList.contains('celebrated')) {
+                        celebrateConfetti();
+                        document.getElementById('progress-text').classList.add('celebrated');
+                    }
+                }, 600);
+            }
+        }
+
+        function updateStreakDisplay() {
+            const streakEl = document.getElementById('streak-text');
+            if (!streakEl) return;
+            
+            const today = new Date();
+            const isCurrentMonthView = (today.getFullYear() === currentYear && today.getMonth() === currentMonth);
+            
+            let streak = 0;
+            let label = '';
+            
+            if (isCurrentMonthView) {
+                let checkDay = today.getDate();
+                while (workDaysSet.has(checkDay) && checkDay >= 1) {
+                    streak++;
+                    checkDay--;
+                }
+                label = streak > 0 ? `${streak} дней подряд` : 'Начни сегодня!';
+            } else {
+                streak = calculateLongestStreak();
+                label = `${streak} дней (макс)`;
+            }
+            
+            streakEl.innerHTML = label;
+        }
+
+        function calculateLongestStreak() {
+            if (workDaysSet.size === 0) return 0;
+            const sorted = Array.from(workDaysSet).sort((a, b) => a - b);
+            let max = 1;
+            let curr = 1;
+            
+            for (let i = 1; i < sorted.length; i++) {
+                if (sorted[i] === sorted[i - 1] + 1) {
+                    curr++;
+                    max = Math.max(max, curr);
+                } else {
+                    curr = 1;
+                }
+            }
+            return max;
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const firstDayRaw = new Date(currentYear, currentMonth, 1).getDay();
+            const startOffset = (firstDayRaw === 0) ? 6 : firstDayRaw - 1;
+            
+            for (let i = 0; i < startOffset; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'h-11';
+                grid.appendChild(empty);
+            }
+            
+            const today = new Date();
+            const isCurrent = (today.getFullYear() === currentYear && today.getMonth() === currentMonth);
+            const todayNum = today.getDate();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                const isWork = workDaysSet.has(day);
+                
+                cell.className = `day-cell h-11 flex items-center justify-center text-sm font-medium rounded-2xl cursor-pointer select-none border ${isWork ? 
+                    'bg-emerald-500 text-white shadow-md shadow-emerald-500/40 border-emerald-400' : 
+                    'bg-zinc-800 border-zinc-700 hover:bg-zinc-700'}`;
+                
+                cell.innerHTML = `<span class="font-semibold">${day}</span>`;
+                
+                if (isCurrent && day === todayNum) {
+                    cell.classList.add('ring-2', 'ring-offset-2', 'ring-offset-zinc-900', 'ring-blue-400');
+                    const badge = document.createElement('div');
+                    badge.className = 'absolute -top-1 -right-1 bg-blue-500 text-white text-[8px] px-1 rounded font-bold';
+                    badge.textContent = 'СЕГОДНЯ';
+                    cell.style.position = 'relative';
+                    cell.appendChild(badge);
+                }
+                
+                cell.onclick = () => toggleWorkDay(day, cell);
+                grid.appendChild(cell);
+            }
+            
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                               'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            const label = document.getElementById('month-label');
+            if (label) label.innerHTML = `${monthNames[currentMonth]} ${currentYear}`;
+        }
+
+        function toggleWorkDay(day, cell) {
+            if (workDaysSet.has(day)) {
+                workDaysSet.delete(day);
+                cell.classList.remove('bg-emerald-500', 'text-white', 'shadow-md', 'shadow-emerald-500/40', 'border-emerald-400');
+                cell.classList.add('bg-zinc-800', 'border-zinc-700', 'hover:bg-zinc-700');
+            } else {
+                workDaysSet.add(day);
+                cell.classList.add('bg-emerald-500', 'text-white', 'shadow-md', 'shadow-emerald-500/40', 'border-emerald-400');
+                cell.classList.remove('bg-zinc-800', 'border-zinc-700', 'hover:bg-zinc-700');
+            }
+            updateStats();
+        }
+
+        function updateRate() {
+            const input = document.getElementById('rate-input');
+            dailyRate = parseInt(input.value) || 0;
+            updateStats();
+        }
+
+        function updatePassive() {
+            const input = document.getElementById('passive-input');
+            passiveRate = parseInt(input.value) || 0;
+            updateStats();
+        }
+
+        function updateGoal() {
+            const input = document.getElementById('goal-input');
+            monthlyGoal = parseInt(input.value) || 100000;
+            updateStats();
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            loadCurrentMonthData();
+            renderCalendar();
+            updateStats();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            loadCurrentMonthData();
+            renderCalendar();
+            updateStats();
+        }
+
+        function loadCurrentMonthData() {
+            const key = getMonthKey();
+            if (monthlyData[key]) {
+                workDaysSet = new Set(monthlyData[key].workDays || []);
+                dailyRate = monthlyData[key].rate || 5000;
+                passiveRate = monthlyData[key].passiveRate || 0;
+            } else {
+                workDaysSet = new Set();
+            }
+            
+            const rateInput = document.getElementById('rate-input');
+            const passiveInput = document.getElementById('passive-input');
+            if (rateInput) rateInput.value = dailyRate;
+            if (passiveInput) passiveInput.value = passiveRate;
+        }
+
+        function fillWeekdays() {
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const dayOfWeek = date.getDay();
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    workDaysSet.add(day);
+                }
+            }
+            renderCalendar();
+            updateStats();
+            showToast('✅ Заполнены все будни (Пн-Пт)');
+        }
+
+        function clearAll() {
+            workDaysSet.clear();
+            renderCalendar();
+            updateStats();
+            showToast('🗑️ Календарь очищен');
+        }
+
+        function randomPlan() {
+            workDaysSet.clear();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const targetDays = Math.floor(Math.random() * 10) + 15;
+            
+            while (workDaysSet.size < targetDays) {
+                const randomDay = Math.floor(Math.random() * daysInMonth) + 1;
+                workDaysSet.add(randomDay);
+            }
+            
+            renderCalendar();
+            updateStats();
+            showToast(`🎲 Случайный план: ${targetDays} дней`);
+        }
+
+        function saveMonth() {
+            saveToStorage();
+            renderHistory();
+            showToast('💾 Месяц сохранён!');
+            celebrateConfetti();
+        }
+
+        function sendStatsToBot() {
+            if (!tg) {
+                showToast('❌ Telegram WebApp не доступен');
+                return;
+            }
+            
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                               'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            
+            const data = {
+                month: `${monthNames[currentMonth]} ${currentYear}`,
+                work_days: workDaysSet.size,
+                earnings: calculateEarnings(),
+                rate: dailyRate,
+                passive_rate: passiveRate
+            };
+            
+            try {
+                tg.sendData(JSON.stringify(data));
+                showToast('📤 Статистика отправлена в бот!');
+            } catch (e) {
+                console.error('Send error:', e);
+                showToast('❌ Ошибка отправки');
+            }
+        }
+
+        function switchTab(index) {
+            for (let i = 0; i <= 2; i++) {
+                const tab = document.getElementById(`tab${i}`);
+                const content = document.getElementById(`content${i}`);
+                
+                if (i === index) {
+                    tab.classList.add('border-b-[3px]', 'border-emerald-500', 'text-emerald-400');
+                    tab.classList.remove('text-zinc-400');
+                    content.classList.remove('hidden');
+                } else {
+                    tab.classList.remove('border-b-[3px]', 'border-emerald-500', 'text-emerald-400');
+                    tab.classList.add('text-zinc-400');
+                    content.classList.add('hidden');
+                }
+            }
+            
+            if (index === 1) {
+                setTimeout(() => initChart(), 100);
+            } else if (index === 2) {
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            if (!list) return;
+            
+            const sorted = Object.entries(monthlyData).sort((a, b) => b[0].localeCompare(a[0]));
+            
+            if (sorted.length === 0) {
+                list.innerHTML = '<div class="text-center text-zinc-500 py-8">Нет сохранённых месяцев</div>';
+                return;
+            }
+            
+            list.innerHTML = sorted.map(([key, data]) => {
+                const [year, month] = key.split('-');
+                const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+                const monthName = monthNames[parseInt(month) - 1];
+                
+                return `
+                    <div class="bg-zinc-800 rounded-2xl p-4 flex items-center justify-between">
+                        <div>
+                            <div class="font-semibold">${monthName} ${year}</div>
+                            <div class="text-xs text-zinc-400">${data.workDays?.length || 0} рабочих дней</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-emerald-400">${(data.earnings || 0).toLocaleString('ru-RU')} ₽</div>
+                            <div class="text-xs text-zinc-500">${data.rate || 0} ₽/день</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function initChart() {
+            const canvas = document.getElementById('earnings-chart');
+            if (!canvas) return;
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            const sorted = Object.entries(monthlyData).sort((a, b) => a[0].localeCompare(b[0])).slice(-6);
+            const labels = sorted.map(([key]) => {
+                const [year, month] = key.split('-');
+                const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+                return monthNames[parseInt(month) - 1];
+            });
+            const values = sorted.map(([, data]) => data.earnings || 0);
+            
+            chartInstance = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Заработок',
+                        data: values,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#71717a' },
+                            grid: { color: '#27272a' }
+                        },
+                        x: {
+                            ticks: { color: '#71717a' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function clearAllData() {
+            if (confirm('Удалить все сохранённые данные?')) {
+                localStorage.removeItem('workEarnData_v2');
+                monthlyData = {};
+                workDaysSet.clear();
+                renderCalendar();
+                updateStats();
+                renderHistory();
+                showToast('🗑️ Все данные удалены');
+            }
+        }
+
+        function showMonthPicker() {
+            showToast('📅 Используйте стрелки для навигации');
+        }
+
+        function toggleTheme() {
+            showToast('🌙 Тема скоро будет доступна');
+        }
+
+        function showUserMenu() {
+            showToast('👤 Меню пользователя');
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-zinc-800 text-white px-4 py-2 rounded-2xl shadow-lg text-sm';
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        function celebrateConfetti() {
+            const emojis = ['🎉', '✨', '🎊', '💰', '💵', '🏆'];
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 100);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            renderCalendar();
+            updateStats();
+            renderHistory();
+        });
+    </script>
+</body>
+</html>
