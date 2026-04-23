@@ -406,10 +406,14 @@ def admin_menu_keyboard():
 
 # ================== MIDDLEWARE ДЛЯ ПРОВЕРКИ ПОДПИСКИ ==================
 async def check_subscription_middleware(handler, event, data):
-    """Проверяет подписку перед выполнением команд (кроме админских)"""
+    """Проверяет подписку перед выполнением команд (кроме админских и callback)"""
     if isinstance(event, Message):
         # Пропускаем админские команды
         if event.text and event.text.startswith(('/admin', '/addchannel', '/removechannel')):
+            return await handler(event, data)
+        
+        # Пропускаем web_app_data (данные из Mini App)
+        if event.web_app_data:
             return await handler(event, data)
         
         # Проверяем подписку
