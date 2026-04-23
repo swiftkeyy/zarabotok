@@ -745,6 +745,27 @@
             renderHistory();
             showToast('💾 Месяц сохранён!');
             celebrateConfetti();
+            
+            // Автоматически отправляем данные в бот
+            if (tg) {
+                const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                                   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+                
+                const data = {
+                    month: `${monthNames[currentMonth]} ${currentYear}`,
+                    work_days: workDaysSet.size,
+                    earnings: calculateEarnings(),
+                    rate: dailyRate,
+                    passive_rate: passiveRate
+                };
+                
+                try {
+                    tg.sendData(JSON.stringify(data));
+                    console.log('Data sent to bot:', data);
+                } catch (e) {
+                    console.error('Send error:', e);
+                }
+            }
         }
 
         function sendStatsToBot() {
