@@ -394,9 +394,9 @@ def setup_scheduler():
 
 # ================== КЛАВИАТУРЫ ==================
 def main_menu_keyboard():
+    # Простое меню без кнопки календаря
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="📅 Открыть календарь", web_app=WebAppInfo(url=WEBAPP_URL))],
-                  [KeyboardButton(text="📊 Моя статистика"), KeyboardButton(text="❓ Помощь")]],
+        keyboard=[[KeyboardButton(text="📊 Моя статистика"), KeyboardButton(text="❓ Помощь")]],
         resize_keyboard=True
     )
 
@@ -448,11 +448,16 @@ async def cmd_start(message: Message):
     if is_new:
         await notify_admins_new_user({"user_id": user.id, "first_name": user.first_name})
     
+    # Inline кнопка для открытия календаря
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📅 Открыть календарь", web_app=WebAppInfo(url=WEBAPP_URL))]
+    ])
+    
     await message.answer(
         f"👋 <b>Привет, {user.first_name}!</b>\n\n"
         f"Это <b>Календарь Заработка</b> — твой личный трекер доходов.\n\n"
         f"📅 Открой Mini App и начни отслеживать свою статистику!",
-        reply_markup=main_menu_keyboard()
+        reply_markup=keyboard
     )
 
 @dp.callback_query(F.data == "check_subscription")
