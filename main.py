@@ -631,11 +631,13 @@ async def admin_refresh(callback: CallbackQuery):
 @dp.message(F.web_app_data)
 async def handle_webapp_data(message: Message):
     try:
+        logger.info(f"Received web_app_data from user {message.from_user.id}")
         data = json.loads(message.web_app_data.data)
+        logger.info(f"Parsed data: {data}")
         await save_stats_from_miniapp(message.from_user.id, data)
         await message.answer("✅ Статистика сохранена!")
     except Exception as e:
-        logger.error(f"web_app_data: {e}")
+        logger.error(f"web_app_data error: {e}")
         await message.answer("❌ Ошибка.")
 
 # ================== ЗАПУСК ==================
