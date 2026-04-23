@@ -344,18 +344,6 @@
                     <div class="text-xs text-orange-400/60">Не останавливайся!</div>
                 </div>
             </div>
-
-            <!-- Chart -->
-            <div class="bg-zinc-800 rounded-3xl p-5">
-                <div class="flex items-center justify-between mb-3 px-1">
-                    <div>
-                        <div class="font-semibold">Динамика за 6 месяцев</div>
-                        <div class="text-xs text-zinc-400">Заработок по месяцам</div>
-                    </div>
-                    <div class="text-emerald-400 text-xs">📈</div>
-                </div>
-                <canvas id="earnings-chart" class="w-full h-[80px]"></canvas>
-            </div>
         </div>
 
         <!-- HISTORY TAB -->
@@ -802,7 +790,7 @@
             }
             
             if (index === 1) {
-                setTimeout(() => initChart(), 100);
+                // График удалён
             } else if (index === 2) {
                 renderHistory();
             }
