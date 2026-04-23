@@ -404,6 +404,31 @@ def admin_menu_keyboard():
     builder.adjust(2)
     return builder.as_markup()
 
+# ================== MIDDLEWARE ДЛЯ ПРОВЕРКИ ПОДПИСКИ ==================
+async def check_subscription_middleware(handler, event, data):
+    """Проверяет подписку перед выполнением команд (кроме админских)"""
+    if isinstance(event, Message):
+        # Пропускаем админские команды
+        if event.text and event.text.startswith(('/admin', '/addchannel', '/removechannel')):
+            return await handler(event, data)
+        
+        # Проверяем подписку
+        not_subscribed = await check_forced_subscription(event.from_user.id)
+        if not_subscribed:
+            text = "📢 <b>Для использования бота подпишись на каналы:</b>\n\n"
+            buttons = []
+            for ch in not_subscribed:
+                text += f"• {ch[2]}\n"
+                buttons.append([InlineKeyboardButton(text=f"📢 {ch[2]}", url=f"https://t.me/{ch[1].lstrip('@')}")])
+            buttons.append([InlineKeyboardButton(text="✅ Проверить подписку", callback_data="check_subscription")])
+            await event.answer(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+            return
+    
+    return await handler(event, data)
+
+# Регистрируем middleware
+dp.message.middleware(check_subscription_middleware)
+
 # ================== ХЕНДЛЕРЫ ==================
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
@@ -412,35 +437,47 @@ async def cmd_start(message: Message):
     if is_new:
         await notify_admins_new_user({"user_id": user.id, "first_name": user.first_name})
     
-    not_subscribed = await check_forced_subscription(user.id)
-    if not_subscribed:
-        text = "📢 <b>Подпишись на каналы:</b>\n\n"
-        buttons = []
-        for ch in not_subscribed:
-            text += f"• {ch[2]}\n"
-            buttons.append([InlineKeyboardButton(text=f"Подписаться", url=f"https://t.me/{ch[1].lstrip('@')}")])
-        buttons.append([InlineKeyboardButton(text="✅ Я подписался", callback_data="check_subscription")])
-        await message.answer(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
-        return
-    
-    await message.answer(f"👋 <b>Привет, {user.first_name}!</b>\n\nЭто <b>Календарь Заработка</b>.", reply_markup=main_menu_keyboard())
+    await message.answer(
+        f"👋 <b>Привет, {user.first_name}!</b>\n\n"
+        f"Это <b>Календарь Заработка</b> — твой личный трекер доходов.\n\n"
+        f"📅 Открой Mini App и начни отслеживать свою статистику!",
+        reply_markup=main_menu_keyboard()
+    )
 
 @dp.callback_query(F.data == "check_subscription")
 async def check_subscription(callback: CallbackQuery):
     not_sub = await check_forced_subscription(callback.from_user.id)
     if not_sub:
-        await callback.answer("Ещё не все каналы!", show_alert=True)
+        await callback.answer("❌ Подпишись на все каналы!", show_alert=True)
     else:
-        await callback.message.edit_text("✅ Спасибо! Теперь можешь пользоваться ботом.")
-        await callback.message.answer("👋 Привет!", reply_markup=main_menu_keyboard())
+        await callback.message.delete()
+        await callback.message.answer(
+            f"✅ <b>Отлично!</b>\n\n"
+            f"Теперь ты можешь пользоваться ботом.",
+            reply_markup=main_menu_keyboard()
+        )
+        await callback.answer("✅ Подписка подтверждена!")
 
 @dp.message(F.text == "📊 Моя статистика")
 async def my_stats(message: Message):
-    await message.answer("📊 Статистика внутри Mini App", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Открыть", web_app=WebAppInfo(url=WEBAPP_URL))]]))
+    await message.answer(
+        "📊 <b>Твоя статистика</b>\n\n"
+        "Открой Mini App, чтобы посмотреть детальную статистику и добавить новые записи.",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="📅 Открыть календарь", web_app=WebAppInfo(url=WEBAPP_URL))
+        ]])
+    )
 
 @dp.message(F.text == "❓ Помощь")
 async def help_cmd(message: Message):
-    await message.answer("❓ Открой Mini App и сохраняй статистику каждый месяц.", reply_markup=main_menu_keyboard())
+    await message.answer(
+        "❓ <b>Как пользоваться ботом:</b>\n\n"
+        "1. Открой Mini App через кнопку ниже\n"
+        "2. Заполняй статистику каждый месяц\n"
+        "3. Отслеживай свой прогресс в календаре\n\n"
+        "💡 Бот будет напоминать тебе о сохранении статистики!",
+        reply_markup=main_menu_keyboard()
+    )
 
 @dp.message(Command("admin"))
 async def admin_panel(message: Message):
