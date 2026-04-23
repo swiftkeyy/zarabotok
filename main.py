@@ -536,9 +536,10 @@ async def add_channel_cmd(message: Message):
     try:
         chat = await bot.get_chat(username)
         await add_forced_channel(chat.id, username, chat.title, message.from_user.id)
-        await message.answer(f"✅ Канал {chat.title} добавлен!")
+        await message.answer(f"✅ Канал <b>{chat.title}</b> добавлен!")
     except Exception as e:
-        await message.answer(f"❌ Ошибка: {e}")
+        logger.error(f"addchannel error: {e}")
+        await message.answer("❌ Ошибка при добавлении канала. Проверь username и права бота.")
 
 @dp.message(Command("removechannel"))
 async def remove_channel_cmd(message: Message):
