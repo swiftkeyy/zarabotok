@@ -32,6 +32,10 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "123456789").split(",")]
 WEBAPP_URL = os.getenv("WEBAPP_URL", "https://твой-бот.bothost.ru/miniapp/work-earn-miniapp.html")
 
+# Проверка токена
+if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
+    raise ValueError("❌ BOT_TOKEN не установлен! Укажи переменную окружения BOT_TOKEN")
+
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")  # Railway PostgreSQL
 USE_POSTGRES = DATABASE_URL is not None
@@ -45,7 +49,10 @@ else:
     # bothost.ru: SQLite
     import aiosqlite
     DB_PATH = os.getenv("DB_PATH", "/app/data/bot_data.db")
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    try:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    except:
+        pass
     logger_msg = f"📦 SQLite ({DB_PATH})"
 
 class Broadcast(StatesGroup):
@@ -632,10 +639,6 @@ async def main():
     await init_db()
     setup_scheduler()
     logger.info(f"🚀 Бот запущен на {logger_msg}")
-    
-    if BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
-        logger.error("❌ Укажи BOT_TOKEN!")
-        return
     
     try:
         await dp.start_polling(bot)
