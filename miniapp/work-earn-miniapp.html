@@ -91,6 +91,57 @@
         .month-label:hover {
             color: #10b981;
         }
+
+        /* Light theme */
+        body.light-theme {
+            background-color: #f4f4f5;
+            color: #18181b;
+        }
+        
+        body.light-theme .mini-app {
+            background-color: #ffffff;
+        }
+        
+        body.light-theme .tg-header {
+            background: linear-gradient(to right, #f4f4f5, #e4e4e7);
+        }
+        
+        body.light-theme .bg-zinc-900 {
+            background-color: #ffffff !important;
+        }
+        
+        body.light-theme .bg-zinc-800 {
+            background-color: #f4f4f5 !important;
+        }
+        
+        body.light-theme .bg-zinc-700 {
+            background-color: #e4e4e7 !important;
+        }
+        
+        body.light-theme .bg-zinc-950 {
+            background-color: #fafafa !important;
+        }
+        
+        body.light-theme .text-zinc-200,
+        body.light-theme .text-zinc-300,
+        body.light-theme .text-zinc-400 {
+            color: #52525b !important;
+        }
+        
+        body.light-theme .border-zinc-800,
+        body.light-theme .border-zinc-700 {
+            border-color: #e4e4e7 !important;
+        }
+        
+        body.light-theme .day-cell:not(.work) {
+            background-color: #f4f4f5;
+            border-color: #e4e4e7;
+            color: #18181b;
+        }
+        
+        body.light-theme .day-cell:hover:not(.work) {
+            background-color: #e4e4e7;
+        }
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200">
@@ -303,7 +354,7 @@
                     </div>
                     <div class="text-emerald-400 text-xs">📈</div>
                 </div>
-                <canvas id="earnings-chart" class="w-full h-[140px]"></canvas>
+                <canvas id="earnings-chart" class="w-full h-[120px]"></canvas>
             </div>
         </div>
 
@@ -855,11 +906,66 @@
         }
 
         function toggleTheme() {
-            showToast('🌙 Тема скоро будет доступна');
+            const body = document.body;
+            const btn = document.getElementById('theme-toggle');
+            
+            if (body.classList.contains('light-theme')) {
+                body.classList.remove('light-theme');
+                if (btn) btn.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+                showToast('🌙 Тёмная тема');
+            } else {
+                body.classList.add('light-theme');
+                if (btn) btn.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+                showToast('☀️ Светлая тема');
+            }
         }
 
         function showUserMenu() {
-            showToast('👤 Меню пользователя');
+            const tgUser = tg?.initDataUnsafe?.user;
+            const userName = tgUser?.first_name || 'Пользователь';
+            const userId = tgUser?.id || 'N/A';
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5';
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            
+            modal.innerHTML = `
+                <div class="bg-zinc-900 rounded-3xl p-6 max-w-sm w-full space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="font-display text-xl font-semibold">Профиль</div>
+                        <button onclick="this.closest('.fixed').remove()" class="w-8 h-8 flex items-center justify-center bg-zinc-800 rounded-2xl text-lg">✕</button>
+                    </div>
+                    
+                    <div class="bg-zinc-800 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center gap-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-2xl">👤</div>
+                            <div>
+                                <div class="font-semibold">${userName}</div>
+                                <div class="text-xs text-zinc-400">ID: ${userId}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="bg-zinc-800 rounded-2xl p-3 flex items-center justify-between text-sm">
+                            <span>📊 Сохранено месяцев</span>
+                            <span class="font-semibold">${Object.keys(monthlyData).length}</span>
+                        </div>
+                        <div class="bg-zinc-800 rounded-2xl p-3 flex items-center justify-between text-sm">
+                            <span>💰 Всего заработано</span>
+                            <span class="font-semibold text-emerald-400">${Object.values(monthlyData).reduce((sum, m) => sum + (m.earnings || 0), 0).toLocaleString('ru-RU')} ₽</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="clearAllData(); this.closest('.fixed').remove();" class="w-full py-3 bg-rose-900/30 hover:bg-rose-900/50 text-rose-400 rounded-2xl text-sm font-medium">
+                        🗑️ Очистить все данные
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
         }
 
         function showToast(message) {
@@ -893,6 +999,14 @@
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
+            // Load theme
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                const btn = document.getElementById('theme-toggle');
+                if (btn) btn.textContent = '☀️';
+            }
+            
             loadFromStorage();
             renderCalendar();
             updateStats();
