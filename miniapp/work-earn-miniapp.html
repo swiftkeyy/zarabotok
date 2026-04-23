@@ -947,7 +947,7 @@
                 // Для этого нужен user_id, который можно получить из localStorage или другого источника
                 const savedUserId = localStorage.getItem('telegram_user_id');
                 if (savedUserId) {
-                    fetch(`https://zarabotok-production.up.railway.app/api/user/${savedUserId}`)
+                    fetch(`https://zarabotok-production.up.railway.app:8081/api/user/${savedUserId}`)
                         .then(res => res.json())
                         .then(data => {
                             if (data.user_id) {
