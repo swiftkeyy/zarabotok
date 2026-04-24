@@ -1732,14 +1732,14 @@
     </div>
 
     <!-- Onboarding Modal -->
-    <div id="onboarding-modal" class="hidden fixed inset-0 z-[9999] onboarding-modal-anim" style="background: rgba(0,0,0,0.95);">
-        <div class="absolute inset-0 flex items-center justify-center p-5">
+    <div id="onboarding-modal" class="hidden fixed inset-0 z-[9999] onboarding-modal-anim overflow-y-auto" style="background: rgba(0,0,0,0.95);">
+        <div class="min-h-screen flex items-center justify-center p-5">
             <!-- Animated background -->
-            <div class="absolute inset-0 bg-gradient-to-br from-black via-zinc-900 to-emerald-950/30 animate-gradient pointer-events-none"></div>
-            <div class="absolute inset-0 backdrop-blur-sm pointer-events-none"></div>
+            <div class="fixed inset-0 bg-gradient-to-br from-black via-zinc-900 to-emerald-950/30 animate-gradient pointer-events-none"></div>
+            <div class="fixed inset-0 backdrop-blur-sm pointer-events-none"></div>
             
             <!-- Floating particles -->
-            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="fixed inset-0 overflow-hidden pointer-events-none">
                 <div class="particle particle-1"></div>
                 <div class="particle particle-2"></div>
                 <div class="particle particle-3"></div>
@@ -1748,14 +1748,14 @@
             </div>
 
             <!-- Skip Button -->
-            <button id="skip-onboarding-btn" class="hidden absolute top-5 right-5 px-5 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl text-white/70 hover:text-white text-sm font-medium transition-all z-20 hover:scale-105 hover:border-white/20" onclick="onboardingManager.skip()">
+            <button id="skip-onboarding-btn" class="hidden fixed top-5 right-5 px-5 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl text-white/70 hover:text-white text-sm font-medium transition-all z-20 hover:scale-105 hover:border-white/20" onclick="onboardingManager.skip()">
                 <span class="flex items-center gap-2">
                     <span>⚡</span>
                     <span>Пропустить</span>
                 </span>
             </button>
 
-            <div class="relative bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/95 backdrop-blur-2xl rounded-[2rem] max-w-md w-full overflow-hidden border border-white/10 shadow-2xl shadow-emerald-500/20 z-10">
+            <div class="relative bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/95 backdrop-blur-2xl rounded-[2rem] max-w-md w-full overflow-hidden border border-white/10 shadow-2xl shadow-emerald-500/20 z-10 my-10">
                 <!-- Glow effect -->
                 <div class="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
                 <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-500/20 rounded-full blur-[100px] pointer-events-none"></div>
