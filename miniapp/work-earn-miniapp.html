@@ -470,15 +470,15 @@
 
         @keyframes checkmarkPop {
             0% {
-                transform: translate(-50%, -50%) scale(0);
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
                 opacity: 0;
             }
             50% {
-                transform: translate(-50%, -50%) scale(1.2);
+                transform: translate(-50%, -50%) scale(1.3) rotate(180deg);
                 opacity: 1;
             }
             100% {
-                transform: translate(-50%, -50%) scale(0);
+                transform: translate(-50%, -50%) scale(0) rotate(360deg);
                 opacity: 0;
             }
         }
@@ -488,12 +488,33 @@
             to { opacity: 0; }
         }
 
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes shimmer-fast {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            33% { transform: translateY(-20px) translateX(10px); }
+            66% { transform: translateY(-10px) translateX(-10px); }
+        }
+
         .onboarding-modal-anim {
-            animation: fadeIn 0.3s ease-out;
+            animation: fadeIn 0.4s ease-out;
         }
 
         .onboarding-step {
-            animation: slideUp 0.4s ease-out;
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .step-exit {
@@ -501,11 +522,24 @@
         }
 
         .step-enter {
-            animation: slideInRight 0.3s ease-out forwards;
+            animation: slideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
         .animate-pulse-slow {
             animation: pulse-slow 3s ease-in-out infinite;
+        }
+
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 8s ease infinite;
+        }
+
+        .shimmer {
+            animation: shimmer 3s infinite;
+        }
+
+        .shimmer-fast {
+            animation: shimmer-fast 2s infinite;
         }
 
         .confirmation-checkmark {
@@ -513,26 +547,27 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0);
-            width: 40px;
-            height: 40px;
-            background: rgba(16, 185, 129, 0.9);
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
             color: white;
             font-weight: bold;
             pointer-events: none;
             z-index: 10;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.8);
         }
 
         .confirmation-checkmark.animate {
-            animation: checkmarkPop 0.6s ease-out forwards;
+            animation: checkmarkPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
         .fade-out {
-            animation: fadeOut 0.3s ease-out forwards;
+            animation: fadeOut 0.4s ease-out forwards;
         }
 
         /* Preview animations */
@@ -540,6 +575,62 @@
         #mode-preview.visible {
             opacity: 1 !important;
             transform: translateY(0) !important;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 6s ease-in-out infinite;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .particle-1 {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+            animation-duration: 7s;
+        }
+
+        .particle-2 {
+            top: 60%;
+            left: 80%;
+            animation-delay: 1s;
+            animation-duration: 8s;
+        }
+
+        .particle-3 {
+            top: 40%;
+            left: 20%;
+            animation-delay: 2s;
+            animation-duration: 6s;
+        }
+
+        .particle-4 {
+            top: 80%;
+            left: 60%;
+            animation-delay: 1.5s;
+            animation-duration: 7.5s;
+        }
+
+        .particle-5 {
+            top: 30%;
+            left: 90%;
+            animation-delay: 0.5s;
+            animation-duration: 6.5s;
+        }
+
+        /* Selected state enhancements */
+        .currency-btn.border-emerald-500,
+        .mode-btn.border-emerald-500 {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(20, 184, 166, 0.2)) !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(16, 185, 129, 0.1);
+            transform: scale(1.05);
         }
 
         /* Responsive design for onboarding */
@@ -554,7 +645,7 @@
 
             .onboarding-step {
                 padding: 1.5rem 1rem !important;
-                padding-top: 5rem !important;
+                padding-top: 6rem !important;
             }
 
             #skip-onboarding-btn {
@@ -562,6 +653,10 @@
                 right: 1rem;
                 padding: 0.5rem 0.75rem;
                 font-size: 0.75rem;
+            }
+
+            .particle {
+                display: none;
             }
         }
     </style>
@@ -1376,8 +1471,185 @@
     </div>
 
     <!-- Onboarding Modal -->
-    <div id="onboarding-modal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-5 onboarding-modal-anim">
+    <div id="onboarding-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-5 onboarding-modal-anim">
+        <!-- Animated background -->
+        <div class="absolute inset-0 bg-gradient-to-br from-black via-zinc-900 to-emerald-950/30 animate-gradient"></div>
+        <div class="absolute inset-0 backdrop-blur-sm"></div>
+        
+        <!-- Floating particles -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="particle particle-1"></div>
+            <div class="particle particle-2"></div>
+            <div class="particle particle-3"></div>
+            <div class="particle particle-4"></div>
+            <div class="particle particle-5"></div>
+        </div>
+
         <!-- Skip Button -->
+        <button id="skip-onboarding-btn" class="hidden absolute top-5 right-5 px-5 py-2.5 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl text-white/70 hover:text-white text-sm font-medium transition-all z-20 hover:scale-105 hover:border-white/20" onclick="onboardingManager.skip()">
+            <span class="flex items-center gap-2">
+                <span>⚡</span>
+                <span>Пропустить</span>
+            </span>
+        </button>
+
+        <div class="relative bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/95 backdrop-blur-2xl rounded-[2rem] max-w-md w-full overflow-hidden border border-white/10 shadow-2xl shadow-emerald-500/20">
+            <!-- Glow effect -->
+            <div class="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+            <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+            
+            <!-- Progress Indicator -->
+            <div id="progress-indicator" class="absolute top-6 left-1/2 -translate-x-1/2 w-4/5 max-w-xs z-10">
+                <div class="bg-black/40 backdrop-blur-xl rounded-2xl p-4 border border-white/10 shadow-lg">
+                    <div class="h-1.5 bg-white/10 rounded-full overflow-hidden mb-2.5 relative">
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent shimmer"></div>
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-400 rounded-full transition-all duration-700 ease-out relative overflow-hidden" style="width: 33%">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent shimmer-fast"></div>
+                        </div>
+                    </div>
+                    <div id="progress-text" class="text-center text-xs text-white/70 font-semibold tracking-wide">Шаг 1 из 3</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Welcome -->
+            <div id="onboarding-step-1" class="relative p-8 pt-28 text-center onboarding-step">
+                <div class="relative inline-block mb-6">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] blur-xl opacity-60 animate-pulse-slow"></div>
+                    <div class="relative w-24 h-24 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-500 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-emerald-500/50 transform hover:scale-110 transition-transform duration-300">
+                        <span class="text-6xl filter drop-shadow-lg">💼</span>
+                    </div>
+                </div>
+                <h2 class="font-display text-4xl font-bold mb-3 bg-gradient-to-r from-white via-emerald-100 to-white bg-clip-text text-transparent">Добро пожаловать!</h2>
+                <p class="text-zinc-400 mb-8 text-base">Давайте настроим приложение под вас</p>
+                <button onclick="onboardingManager.nextStep(2)" class="group relative w-full py-4 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white font-bold text-base rounded-2xl transition-all overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98]">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent shimmer-fast"></div>
+                    <span class="relative flex items-center justify-center gap-2">
+                        <span>Начать настройку</span>
+                        <span class="group-hover:translate-x-1 transition-transform">→</span>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Step 2: Currency Selection -->
+            <div id="onboarding-step-2" class="hidden relative p-8 pt-28 onboarding-step">
+                <h2 class="font-display text-3xl font-bold mb-2 bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">Выберите валюту</h2>
+                <p class="text-zinc-400 text-sm mb-6">В какой валюте вы получаете доход?</p>
+                
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <button onclick="onboardingManager.selectCurrency('₽', 'RUB', this)" class="currency-btn group relative p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-center transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative text-4xl mb-2 transform group-hover:scale-110 transition-transform">₽</div>
+                        <div class="relative text-xs text-zinc-400 group-hover:text-zinc-300">Рубль</div>
+                    </button>
+                    <button onclick="onboardingManager.selectCurrency('$', 'USD', this)" class="currency-btn group relative p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-center transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative text-4xl mb-2 transform group-hover:scale-110 transition-transform">$</div>
+                        <div class="relative text-xs text-zinc-400 group-hover:text-zinc-300">Доллар</div>
+                    </button>
+                    <button onclick="onboardingManager.selectCurrency('€', 'EUR', this)" class="currency-btn group relative p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-center transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative text-4xl mb-2 transform group-hover:scale-110 transition-transform">€</div>
+                        <div class="relative text-xs text-zinc-400 group-hover:text-zinc-300">Евро</div>
+                    </button>
+                    <button onclick="onboardingManager.selectCurrency('₸', 'KZT', this)" class="currency-btn group relative p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-center transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative text-4xl mb-2 transform group-hover:scale-110 transition-transform">₸</div>
+                        <div class="relative text-xs text-zinc-400 group-hover:text-zinc-300">Тенге</div>
+                    </button>
+                    <button onclick="onboardingManager.selectCurrency('£', 'GBP', this)" class="currency-btn group relative p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-center transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative text-4xl mb-2 transform group-hover:scale-110 transition-transform">£</div>
+                        <div class="relative text-xs text-zinc-400 group-hover:text-zinc-300">Фунт</div>
+                    </button>
+                    <button onclick="onboardingManager.selectCurrency('¥', 'CNY', this)" class="currency-btn group relative p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-center transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative text-4xl mb-2 transform group-hover:scale-110 transition-transform">¥</div>
+                        <div class="relative text-xs text-zinc-400 group-hover:text-zinc-300">Юань</div>
+                    </button>
+                </div>
+
+                <!-- Currency Preview -->
+                <div id="currency-preview" class="hidden mb-5 p-4 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-500/30 rounded-2xl opacity-0 translate-y-2 transition-all duration-300 backdrop-blur-sm relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer"></div>
+                    <div class="relative">
+                        <div class="text-[10px] text-emerald-400/70 uppercase tracking-widest mb-2 font-bold">✓ Выбрано</div>
+                        <div class="flex items-center gap-3">
+                            <span id="preview-symbol" class="text-3xl font-bold drop-shadow-lg"></span>
+                            <span id="preview-name" class="text-base text-white/90 font-medium"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="onboardingManager.nextStep(3)" id="currency-next-btn" disabled class="group relative w-full py-4 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 disabled:from-zinc-700 disabled:via-zinc-700 disabled:to-zinc-700 disabled:text-zinc-500 text-white font-bold text-base rounded-2xl transition-all overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:hover:shadow-none">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent shimmer-fast"></div>
+                    <span class="relative flex items-center justify-center gap-2">
+                        <span>Далее</span>
+                        <span class="group-hover:translate-x-1 transition-transform">→</span>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Step 3: Work Mode Selection -->
+            <div id="onboarding-step-3" class="hidden relative p-8 pt-28 onboarding-step">
+                <h2 class="font-display text-3xl font-bold mb-2 bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">Как вы работаете?</h2>
+                <p class="text-zinc-400 text-sm mb-6">Выберите режим расчета заработка</p>
+                
+                <div class="space-y-3 mb-4">
+                    <button onclick="onboardingManager.selectWorkMode('daily', this)" class="mode-btn group relative w-full p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-left transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative flex items-start gap-4">
+                            <div class="text-3xl transform group-hover:scale-110 transition-transform">💵</div>
+                            <div class="flex-1">
+                                <div class="font-bold text-base mb-1.5">Фиксированная ставка</div>
+                                <div class="text-xs text-zinc-400 leading-relaxed">Одинаковая сумма за каждый рабочий день</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button onclick="onboardingManager.selectWorkMode('salary', this)" class="mode-btn group relative w-full p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-left transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative flex items-start gap-4">
+                            <div class="text-3xl transform group-hover:scale-110 transition-transform">📊</div>
+                            <div class="flex-1">
+                                <div class="font-bold text-base mb-1.5">Оклад</div>
+                                <div class="text-xs text-zinc-400 leading-relaxed">Фиксированная сумма за месяц</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button onclick="onboardingManager.selectWorkMode('freelance', this)" class="mode-btn group relative w-full p-5 bg-zinc-800/50 backdrop-blur-sm hover:bg-zinc-700/50 rounded-2xl text-left transition-all border-2 border-transparent hover:border-emerald-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/20 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/10 group-hover:to-teal-500/10 transition-all duration-300"></div>
+                        <div class="relative flex items-start gap-4">
+                            <div class="text-3xl transform group-hover:scale-110 transition-transform">🎯</div>
+                            <div class="flex-1">
+                                <div class="font-bold text-base mb-1.5">Фриланс</div>
+                                <div class="text-xs text-zinc-400 leading-relaxed">Разная сумма для каждого дня</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Mode Preview -->
+                <div id="mode-preview" class="hidden mb-5 p-4 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-500/30 rounded-2xl opacity-0 translate-y-2 transition-all duration-300 backdrop-blur-sm relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer"></div>
+                    <div class="relative flex items-center gap-4">
+                        <div id="mode-preview-icon" class="text-4xl drop-shadow-lg"></div>
+                        <div class="flex-1">
+                            <div class="text-[10px] text-emerald-400/70 uppercase tracking-widest mb-1 font-bold">✓ Выбрано</div>
+                            <div id="mode-preview-title" class="font-bold text-base mb-1"></div>
+                            <div id="mode-preview-example" class="text-xs text-white/60"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="onboardingManager.complete()" id="mode-next-btn" disabled class="group relative w-full py-4 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 disabled:from-zinc-700 disabled:via-zinc-700 disabled:to-zinc-700 disabled:text-zinc-500 text-white font-bold text-base rounded-2xl transition-all overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:hover:shadow-none">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent shimmer-fast"></div>
+                    <span class="relative flex items-center justify-center gap-2">
+                        <span>🚀</span>
+                        <span>Начать работу</span>
+                    </span>
+                </button>
+            </div>
         <button id="skip-onboarding-btn" class="hidden absolute top-5 right-5 px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl text-white/70 hover:text-white/90 text-sm font-medium transition-all z-10" onclick="onboardingManager.skip()">
             Пропустить
         </button>
