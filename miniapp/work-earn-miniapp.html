@@ -598,7 +598,7 @@
                     <div class="w-full">
                         <div class="text-xs uppercase tracking-widest text-zinc-400 mb-2">УЖЕ ЗАРАБОТАНО</div>
                         <div id="earned-already" class="font-display text-[32px] font-bold leading-tight text-emerald-400 tabular-nums money break-words">45 000</div>
-                        <div class="text-xs text-emerald-400/70 mt-1">₽ за прошедшие дни</div>
+                        <div class="text-xs text-emerald-400/70 mt-1"><span class="currency-symbol">₽</span> за прошедшие дни</div>
                     </div>
                 </div>
             </div>
@@ -1308,8 +1308,7 @@
             }
             
             if (plannedEarningsEl) {
-                const plannedText = plannedEarnings.toLocaleString('ru-RU');
-                plannedEarningsEl.textContent = plannedText + ' ' + currency;
+                plannedEarningsEl.textContent = formatCurrency(plannedEarnings);
             }
             
             if (restEl) restEl.innerHTML = restCount;
