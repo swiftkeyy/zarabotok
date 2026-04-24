@@ -4672,7 +4672,11 @@
 
                 this.saveSettings(settings);
                 this.close();
-                showToast(`✅ Настройки сохранены! Валюта: ${settings.currency}`);
+                
+                // Reload page to apply settings
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
             },
 
             saveSettings(settings) {
