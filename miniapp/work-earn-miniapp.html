@@ -4524,6 +4524,7 @@
             },
 
             selectCurrency(symbol, code, element) {
+                console.log('selectCurrency called:', symbol, code);
                 this.state.selectedCurrency = symbol;
                 this.state.selectedCurrencyCode = code;
 
@@ -4544,7 +4545,11 @@
 
                 // Enable next button
                 const nextBtn = document.getElementById('currency-next-btn');
-                if (nextBtn) nextBtn.disabled = false;
+                console.log('Next button found:', nextBtn);
+                if (nextBtn) {
+                    nextBtn.disabled = false;
+                    console.log('Button enabled');
+                }
             },
 
             selectWorkMode(mode, element) {
