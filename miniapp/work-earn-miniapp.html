@@ -53,11 +53,16 @@
             overflow: hidden;
         }
         
+        .stat-card > div {
+            width: 100%;
+        }
+        
         .stat-card .money {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             max-width: 100%;
+            display: block;
         }
 
         .mini-app {
@@ -303,24 +308,18 @@
             <!-- Main numbers -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="stat-card bg-zinc-800 rounded-3xl p-5">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="text-xs uppercase tracking-widest text-zinc-400">РАБОЧИХ ДНЕЙ</div>
-                            <div id="work-days" class="font-display text-[42px] font-bold leading-none mt-1 tabular-nums">18</div>
-                            <div class="text-emerald-400 text-sm -mt-1">из <span id="total-days">30</span></div>
-                        </div>
-                        <div class="text-5xl opacity-20">📅</div>
+                    <div class="w-full">
+                        <div class="text-xs uppercase tracking-widest text-zinc-400">РАБОЧИХ ДНЕЙ</div>
+                        <div id="work-days" class="font-display text-[42px] font-bold leading-none mt-1 tabular-nums">18</div>
+                        <div class="text-emerald-400 text-sm -mt-1">из <span id="total-days">30</span></div>
                     </div>
                 </div>
                 
                 <div class="stat-card bg-zinc-800 rounded-3xl p-5">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="text-xs uppercase tracking-widest text-zinc-400">ЗАРАБОТОК</div>
-                            <div id="earnings" class="font-display text-[42px] font-bold leading-none mt-1 text-emerald-400 tabular-nums money">90 000</div>
-                            <div class="text-xs text-emerald-400/70">₽ за месяц</div>
-                        </div>
-                        <div class="text-5xl opacity-20">💵</div>
+                    <div class="w-full">
+                        <div class="text-xs uppercase tracking-widest text-zinc-400">ЗАРАБОТОК</div>
+                        <div id="earnings" class="font-display text-[42px] font-bold leading-none mt-1 text-emerald-400 tabular-nums money">90 000</div>
+                        <div class="text-xs text-emerald-400/70">₽ за месяц</div>
                     </div>
                 </div>
             </div>
