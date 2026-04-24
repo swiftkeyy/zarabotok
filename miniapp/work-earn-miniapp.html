@@ -747,36 +747,106 @@
             showToast(`🎲 Случайный план: ${targetDays} дней`);
         }
 
-        function saveMonth() {
+        async function saveMonth() {
             saveToStorage();
             renderHistory();
             
-            // Автоматически отправляем данные в бот
-            if (tg) {
-                const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
-                                   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-                
-                const data = {
-                    month: `${monthNames[currentMonth]} ${currentYear}`,
-                    work_days: workDaysSet.size,
-                    earnings: calculateEarnings(),
-                    rate: dailyRate,
-                    passive_rate: passiveRate
-                };
-                
-                try {
-                    tg.sendData(JSON.stringify(data));
-                    console.log('Data sent to bot:', data);
-                    showToast('💾 Месяц сохранён! 📤 Отправлено в бот');
-                } catch (e) {
-                    console.error('Send error:', e);
-                    showToast('💾 Месяц сохранён локально');
-                }
-            } else {
-                showToast('💾 Месяц сохранён!');
-            }
+            showToast('📸 Создаю скриншот календаря...');
             
-            celebrateConfetti();
+            // Ждём немного для рендеринга
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            try {
+                // Находим контейнер календаря (вся вкладка)
+                const calendarContent = document.getElementById('content0');
+                if (!calendarContent) {
+                    showToast('❌ Ошибка: не найден календарь');
+                    celebrateConfetti();
+                    return;
+                }
+                
+                // Создаём скриншот
+                const canvas = await html2canvas(calendarContent, {
+                    backgroundColor: '#18181b',
+                    scale: 2,
+                    logging: false,
+                    useCORS: true
+                });
+                
+                // Конвертируем в blob
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        showToast('❌ Ошибка создания изображения');
+                        celebrateConfetti();
+                        return;
+                    }
+                    
+                    // Получаем user_id из Telegram
+                    const tgUser = tg?.initDataUnsafe?.user;
+                    let userId = tgUser?.id;
+                    
+                    if (!userId && tg?.initData) {
+                        try {
+                            const params = new URLSearchParams(tg.initData);
+                            const userStr = params.get('user');
+                            if (userStr) {
+                                const user = JSON.parse(userStr);
+                                userId = user.id;
+                            }
+                        } catch (e) {
+                            console.error('Parse error:', e);
+                        }
+                    }
+                    
+                    if (!userId) {
+                        userId = localStorage.getItem('telegram_user_id');
+                    }
+                    
+                    if (!userId) {
+                        showToast('💾 Месяц сохранён локально');
+                        celebrateConfetti();
+                        return;
+                    }
+                    
+                    // Отправляем на сервер
+                    const formData = new FormData();
+                    formData.append('photo', blob, 'calendar.png');
+                    formData.append('user_id', userId);
+                    
+                    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                                       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+                    const earnings = calculateEarnings();
+                    const caption = `📅 ${monthNames[currentMonth]} ${currentYear}\n\n💼 Рабочих дней: ${workDaysSet.size}\n💰 Заработок: ${earnings.toLocaleString('ru-RU')} ₽`;
+                    formData.append('caption', caption);
+                    
+                    showToast('📤 Отправляю в бот...');
+                    
+                    try {
+                        const response = await fetch('/api/send_photo', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (response.ok) {
+                            showToast('✅ Месяц сохранён и отправлен в бот!');
+                        } else {
+                            const error = await response.text();
+                            console.error('Server error:', error);
+                            showToast('💾 Месяц сохранён локально');
+                        }
+                    } catch (e) {
+                        console.error('Send error:', e);
+                        showToast('💾 Месяц сохранён локально');
+                    }
+                    
+                    celebrateConfetti();
+                }, 'image/png');
+                
+            } catch (e) {
+                console.error('Screenshot error:', e);
+                showToast('💾 Месяц сохранён локально');
+                celebrateConfetti();
+            }
         }
 
         async function shareStats() {
