@@ -1459,7 +1459,7 @@
 
         // Helper function to format currency
         function formatCurrency(amount) {
-            return amount.toLocaleString('ru-RU') + ' ' + currency;
+            return amount.toLocaleString('ru-RU').replace(/\s/g, '\u00A0') + '\u00A0' + currency;
         }
 
         // Initialize Telegram WebApp
@@ -1711,7 +1711,7 @@
             if (workEl) workEl.innerHTML = `${workCount}<span class="text-base font-normal text-zinc-400">/${daysInMonth}</span>`;
             
             if (earnedAlreadyEl) {
-                const earnedText = earnedAlready.toLocaleString('ru-RU');
+                const earnedText = earnedAlready.toLocaleString('ru-RU').replace(/\s/g, '\u00A0');
                 if (earnedText.length > 10) {
                     earnedAlreadyEl.className = 'font-display text-[20px] font-bold leading-tight text-emerald-400 tabular-nums money break-words';
                 } else if (earnedText.length > 8) {
@@ -2669,7 +2669,7 @@
                         </div>
                         <div class="text-right">
                             <div class="font-semibold text-emerald-400">${formatCurrency(data.earnings || 0)}</div>
-                            <div class="text-xs text-zinc-500">${(data.rate || 0).toLocaleString('ru-RU')} ${currency}/день</div>
+                            <div class="text-xs text-zinc-500">${(data.rate || 0).toLocaleString('ru-RU').replace(/\s/g, '\u00A0')}\u00A0${currency}/день</div>
                         </div>
                     </div>
                 `;
