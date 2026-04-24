@@ -845,11 +845,11 @@
                         <option value="💳 Другое">💳 Другое</option>
                     </select>
                 </div>
-                <div class="grid grid-cols-[1fr_auto] gap-2 mb-2">
+                <div class="grid grid-cols-[1fr_120px] gap-2 mb-2">
                     <input type="text" id="expense-name" placeholder="Название расхода" 
                            class="bg-zinc-700 text-white px-4 py-2 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <input type="number" id="expense-amount" placeholder="Сумма" 
-                           class="bg-zinc-700 text-white px-4 py-2 rounded-2xl text-sm w-28 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                           class="bg-zinc-700 text-white px-4 py-2 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
                 <button onclick="addExpense()" 
                         class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-sm font-medium">
@@ -1055,10 +1055,10 @@
         <!-- Bottom controls -->
         <div class="border-t border-zinc-800 bg-zinc-950 px-5 py-4">
             <!-- Daily Rate Mode -->
-            <div id="controls-daily" class="grid grid-cols-2 gap-3 mb-3">
-                <div>
+            <div id="controls-daily" class="mb-3">
+                <div class="mb-3">
                     <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">СТАВКА ЗА РАБОЧИЙ ДЕНЬ</div>
-                    <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-1">
+                    <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-2">
                         <input type="number" id="rate-input" value="5000" 
                                class="flex-1 bg-transparent text-2xl font-semibold focus:outline-none money" 
                                onchange="updateRate()">
@@ -1067,8 +1067,8 @@
                 </div>
                 
                 <div>
-                    <div class="text-[10px] uppercase tracking-[0.5px] text-zinc-400 mb-1 px-1">ДОХОД ЗА ОТДЫХ</div>
-                    <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-1">
+                    <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">ДОХОД ЗА ОТДЫХ</div>
+                    <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-2">
                         <input type="number" id="passive-input" value="0" 
                                class="flex-1 bg-transparent text-2xl font-semibold focus:outline-none money" 
                                onchange="updatePassive()">
@@ -1095,6 +1095,29 @@
                     <div class="text-2xl mb-2">🎯</div>
                     <div class="font-semibold mb-1">Режим фриланса</div>
                     <div class="text-xs text-zinc-400">Нажмите на день в календаре чтобы указать сумму заработка</div>
+                </div>
+            </div>
+
+            <!-- Hourly Mode -->
+            <div id="controls-hourly" class="hidden mb-3">
+                <div class="mb-3">
+                    <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">СТАВКА ЗА ЧАС</div>
+                    <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-2">
+                        <input type="number" id="hourly-rate-input" value="500" 
+                               class="flex-1 bg-transparent text-2xl font-semibold focus:outline-none money" 
+                               onchange="updateHourlyRate()">
+                        <span class="text-xl text-zinc-400 currency-symbol">₽</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">ЧАСОВ В ДЕНЬ</div>
+                    <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-2">
+                        <input type="number" id="hours-per-day-input" value="8" min="1" max="24"
+                               class="flex-1 bg-transparent text-2xl font-semibold focus:outline-none money" 
+                               onchange="updateHoursPerDay()">
+                        <span class="text-xl text-zinc-400">ч</span>
+                    </div>
                 </div>
             </div>
             
@@ -1323,8 +1346,10 @@
         // New: Currency and work mode
         let currency = '₽';
         let currencyCode = 'RUB';
-        let workMode = 'daily'; // 'daily', 'salary', 'freelance'
+        let workMode = 'daily'; // 'daily', 'hourly', 'salary', 'freelance'
         let monthlySalary = 150000;
+        let hourlyRate = 500;
+        let hoursPerDay = 8;
         let freelanceEarnings = {}; // {day: amount}
         
         // Multiple goals data structure
@@ -1623,6 +1648,9 @@
                     total += freelanceEarnings[day] || 0;
                 });
                 return total + (restCount * passiveRate);
+            } else if (workMode === 'hourly') {
+                // Почасовая: ставка за час * часов в день * рабочих дней
+                return (workCount * hourlyRate * hoursPerDay) + (restCount * passiveRate);
             } else {
                 // Daily: фиксированная ставка за день
                 return (workCount * dailyRate) + (restCount * passiveRate);
@@ -1641,12 +1669,19 @@
             document.getElementById('controls-daily').classList.add('hidden');
             document.getElementById('controls-salary').classList.add('hidden');
             document.getElementById('controls-freelance').classList.add('hidden');
+            if (document.getElementById('controls-hourly')) {
+                document.getElementById('controls-hourly').classList.add('hidden');
+            }
             
             // Show current mode controls
             if (workMode === 'salary') {
                 document.getElementById('controls-salary').classList.remove('hidden');
             } else if (workMode === 'freelance') {
                 document.getElementById('controls-freelance').classList.remove('hidden');
+            } else if (workMode === 'hourly') {
+                if (document.getElementById('controls-hourly')) {
+                    document.getElementById('controls-hourly').classList.remove('hidden');
+                }
             } else {
                 document.getElementById('controls-daily').classList.remove('hidden');
             }
@@ -1681,6 +1716,20 @@
                     // Оклад: пропорционально прошедшим дням
                     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
                     earnedAlready = Math.round((monthlySalary / daysInMonth) * (currentDay - 1));
+                } else if (workMode === 'hourly') {
+                    // Почасовая: считаем часы за прошедшие рабочие дни
+                    let pastWorkDays = 0;
+                    let pastRestDays = 0;
+                    
+                    for (let day = 1; day < currentDay; day++) {
+                        if (workDaysSet.has(day)) {
+                            pastWorkDays++;
+                        } else {
+                            pastRestDays++;
+                        }
+                    }
+                    
+                    earnedAlready = (pastWorkDays * hourlyRate * hoursPerDay) + (pastRestDays * passiveRate);
                 } else {
                     // Daily: фиксированная ставка
                     let pastWorkDays = 0;
@@ -2052,6 +2101,24 @@
             const input = document.getElementById('passive-input');
             passiveRate = parseInt(input.value) || 0;
             updateStats();
+        }
+
+        function updateHourlyRate() {
+            const input = document.getElementById('hourly-rate-input');
+            if (input) {
+                hourlyRate = parseInt(input.value) || 500;
+                localStorage.setItem('hourlyRate', hourlyRate);
+                updateStats();
+            }
+        }
+
+        function updateHoursPerDay() {
+            const input = document.getElementById('hours-per-day-input');
+            if (input) {
+                hoursPerDay = parseInt(input.value) || 8;
+                localStorage.setItem('hoursPerDay', hoursPerDay);
+                updateStats();
+            }
         }
 
         function updateGoal() {
@@ -3862,7 +3929,7 @@
                 <div class="bg-zinc-900 rounded-3xl p-6 max-w-sm w-full">
                     <div class="text-center mb-4">
                         <div class="font-display text-xl font-semibold">Выберите режим работы</div>
-                        <div class="text-xs text-zinc-400 mt-1">Текущий: ${workMode === 'daily' ? 'Фиксированная ставка' : workMode === 'salary' ? 'Оклад' : 'Фриланс'}</div>
+                        <div class="text-xs text-zinc-400 mt-1">Текущий: ${workMode === 'daily' ? 'Фиксированная ставка' : workMode === 'hourly' ? 'Почасовая оплата' : workMode === 'salary' ? 'Оклад' : 'Фриланс'}</div>
                     </div>
                     
                     <div class="space-y-2 mb-4">
@@ -3873,6 +3940,17 @@
                                 <div class="flex-1">
                                     <div class="font-semibold text-sm">Фиксированная ставка</div>
                                     <div class="text-xs text-zinc-400">Одинаковая сумма за каждый рабочий день</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="changeWorkMode('hourly'); this.closest('.fixed').remove();" 
+                                class="w-full p-3 ${workMode === 'hourly' ? 'bg-emerald-900/30 border-2 border-emerald-500' : 'bg-zinc-800 border-2 border-transparent'} hover:bg-zinc-700 rounded-2xl text-left transition-all">
+                            <div class="flex items-start gap-3">
+                                <div class="text-xl">⏰</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm">Почасовая оплата</div>
+                                    <div class="text-xs text-zinc-400">Укажите ставку за час и часы работы</div>
                                 </div>
                             </div>
                         </button>
@@ -3920,6 +3998,7 @@
             
             const modeNames = {
                 'daily': 'Фиксированная ставка',
+                'hourly': 'Почасовая оплата',
                 'salary': 'Оклад',
                 'freelance': 'Фриланс'
             };
@@ -3949,6 +4028,16 @@
                 currency = localStorage.getItem('currency') || '₽';
                 currencyCode = localStorage.getItem('currencyCode') || 'RUB';
                 workMode = localStorage.getItem('workMode') || 'daily';
+                hourlyRate = parseInt(localStorage.getItem('hourlyRate')) || 500;
+                hoursPerDay = parseInt(localStorage.getItem('hoursPerDay')) || 8;
+                
+                // Update hourly inputs if they exist
+                if (document.getElementById('hourly-rate-input')) {
+                    document.getElementById('hourly-rate-input').value = hourlyRate;
+                }
+                if (document.getElementById('hours-per-day-input')) {
+                    document.getElementById('hours-per-day-input').value = hoursPerDay;
+                }
                 
                 // Load theme
                 const savedTheme = localStorage.getItem('theme') || 'dark';
