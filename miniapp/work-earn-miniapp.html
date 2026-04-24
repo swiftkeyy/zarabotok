@@ -1842,7 +1842,7 @@
                     </div>
                 </div>
 
-                <button onclick="onboardingManager.nextStep(3)" id="currency-next-btn" disabled class="group relative w-full py-4 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 disabled:from-zinc-700 disabled:via-zinc-700 disabled:to-zinc-700 disabled:text-zinc-500 text-white font-bold text-base rounded-2xl transition-all overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:hover:shadow-none">
+                <button onclick="onboardingManager.nextStep(3)" id="currency-next-btn" class="group relative w-full py-4 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white font-bold text-base rounded-2xl transition-all overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98]">
                     <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent shimmer-fast pointer-events-none"></div>
                     <span class="relative flex items-center justify-center gap-2">
                         <span>Далее</span>
@@ -1904,7 +1904,7 @@
                     </div>
                 </div>
 
-                <button onclick="onboardingManager.complete()" id="mode-next-btn" disabled class="group relative w-full py-4 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 disabled:from-zinc-700 disabled:via-zinc-700 disabled:to-zinc-700 disabled:text-zinc-500 text-white font-bold text-base rounded-2xl transition-all overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:hover:shadow-none">
+                <button onclick="onboardingManager.complete()" id="mode-next-btn" class="group relative w-full py-4 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white font-bold text-base rounded-2xl transition-all overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98]">
                     <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent shimmer-fast pointer-events-none"></div>
                     <span class="relative flex items-center justify-center gap-2">
                         <span>🚀</span>
@@ -4542,14 +4542,6 @@
 
                 // Update preview
                 this.updateCurrencyPreview(symbol, code);
-
-                // Enable next button
-                const nextBtn = document.getElementById('currency-next-btn');
-                console.log('Next button found:', nextBtn);
-                if (nextBtn) {
-                    nextBtn.disabled = false;
-                    console.log('Button enabled');
-                }
             },
 
             selectWorkMode(mode, element) {
@@ -4569,10 +4561,6 @@
 
                 // Update preview
                 this.updateModePreview(mode);
-
-                // Enable complete button
-                const nextBtn = document.getElementById('mode-next-btn');
-                if (nextBtn) nextBtn.disabled = false;
             },
 
             showConfirmation(element) {
