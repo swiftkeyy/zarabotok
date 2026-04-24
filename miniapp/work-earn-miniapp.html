@@ -928,96 +928,9 @@
         async function saveMonth() {
             saveToStorage();
             renderHistory();
-            
-            showToast('📸 Создаю скриншот календаря...');
-            
-            // Ждём немного для рендеринга
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            try {
-                // Находим контейнер календаря (вся вкладка)
-                const calendarContent = document.getElementById('content0');
-                if (!calendarContent) {
-                    showToast('❌ Ошибка: не найден календарь');
-                    celebrateConfetti();
-                    return;
-                }
-                
-                // Создаём скриншот
-                const canvas = await html2canvas(calendarContent, {
-                    backgroundColor: '#18181b',
-                    scale: 2,
-                    logging: false,
-                    useCORS: true
-                });
-                
-                // Конвертируем в blob
-                canvas.toBlob(async (blob) => {
-                    if (!blob) {
-                        showToast('❌ Ошибка создания изображения');
-                        celebrateConfetti();
-                        return;
-                    }
-                    
-                    // Получаем user_id из Telegram
-                    const tgUser = tg?.initDataUnsafe?.user;
-                    let userId = tgUser?.id;
-                    
-                    if (!userId && tg?.initData) {
-                        try {
-                            const params = new URLSearchParams(tg.initData);
-                            const userStr = params.get('user');
-                            if (userStr) {
-                                const user = JSON.parse(userStr);
-                                userId = user.id;
-                            }
-                        } catch (e) {
-                            console.error('Parse error:', e);
-                        }
-                    }
-                    
-                    if (!userId) {
-                        userId = localStorage.getItem('telegram_user_id');
-                    }
-                    
-                    if (!userId) {
-                        showToast('💾 Месяц сохранён локально');
-                        celebrateConfetti();
-                        return;
-                    }
-                    
-                    // Отправляем на сервер
-                    const formData = new FormData();
-                    formData.append('photo', blob, 'calendar.png');
-                    formData.append('user_id', userId);
-                    
-                    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
-                                       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-                    const earnings = calculateEarnings();
-                    const caption = `📅 ${monthNames[currentMonth]} ${currentYear}\n\n💼 Рабочих дней: ${workDaysSet.size}\n💰 Заработок: ${earnings.toLocaleString('ru-RU')} ₽`;
-                    formData.append('caption', caption);
-                    
-                    showToast('📤 Отправляю в бот...');
-                    
-                    try {
-                        const response = await fetch('/api/send_photo', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        if (response.ok) {
-                            showToast('✅ Месяц сохранён и отправлен в бот!');
-                        } else {
-                            const error = await response.text();
-                            console.error('Server error:', error);
-                            showToast('💾 Месяц сохранён локально');
-                        }
-                    } catch (e) {
-                        console.error('Send error:', e);
-                        showToast('💾 Месяц сохранён локально');
-                    }
-                    
-                    celebrateConfetti();
+            showToast('💾 Месяц сохранён локально');
+            celebrateConfetti();
+        }
                 }, 'image/png');
                 
             } catch (e) {
@@ -1033,96 +946,140 @@
                 return;
             }
             
-            showToast('📸 Создаю скриншот...');
+            // Получаем user_id из Telegram
+            const tgUser = tg?.initDataUnsafe?.user;
+            let userId = tgUser?.id;
             
-            // Переключаемся на вкладку статистики если не там
-            switchTab(1);
+            if (!userId && tg?.initData) {
+                try {
+                    const params = new URLSearchParams(tg.initData);
+                    const userStr = params.get('user');
+                    if (userStr) {
+                        const user = JSON.parse(userStr);
+                        userId = user.id;
+                    }
+                } catch (e) {
+                    console.error('Parse error:', e);
+                }
+            }
             
-            // Ждём рендеринга
-            await new Promise(resolve => setTimeout(resolve, 300));
+            if (!userId) {
+                userId = localStorage.getItem('telegram_user_id');
+            }
+            
+            if (!userId) {
+                showToast('❌ Не удалось определить ID пользователя');
+                return;
+            }
+            
+            showToast('📸 Создаю скриншоты...');
             
             try {
-                // Находим контейнер статистики
-                const statsContent = document.getElementById('content1');
-                if (!statsContent) {
-                    showToast('❌ Ошибка: не найден контейнер статистики');
+                const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                                   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+                
+                // 1. Скриншот календаря
+                switchTab(0);
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const calendarContent = document.getElementById('content0');
+                if (!calendarContent) {
+                    showToast('❌ Ошибка: не найден календарь');
                     return;
                 }
                 
-                // Создаём скриншот
-                const canvas = await html2canvas(statsContent, {
+                const calendarCanvas = await html2canvas(calendarContent, {
                     backgroundColor: '#18181b',
                     scale: 2,
                     logging: false,
                     useCORS: true
                 });
                 
-                // Конвертируем в blob
-                canvas.toBlob(async (blob) => {
-                    if (!blob) {
-                        showToast('❌ Ошибка создания изображения');
-                        return;
-                    }
-                    
-                    // Получаем user_id из Telegram
-                    const tgUser = tg?.initDataUnsafe?.user;
-                    let userId = tgUser?.id;
-                    
-                    if (!userId && tg?.initData) {
+                // Отправляем календарь
+                await new Promise((resolve, reject) => {
+                    calendarCanvas.toBlob(async (blob) => {
+                        if (!blob) {
+                            reject('Calendar blob error');
+                            return;
+                        }
+                        
+                        const formData = new FormData();
+                        formData.append('photo', blob, 'calendar.png');
+                        formData.append('user_id', userId);
+                        const earnings = calculateEarnings();
+                        formData.append('caption', `📅 ${monthNames[currentMonth]} ${currentYear}\n\n💼 Рабочих дней: ${workDaysSet.size}\n💰 Заработок: ${earnings.toLocaleString('ru-RU')} ₽`);
+                        
                         try {
-                            const params = new URLSearchParams(tg.initData);
-                            const userStr = params.get('user');
-                            if (userStr) {
-                                const user = JSON.parse(userStr);
-                                userId = user.id;
+                            const response = await fetch('/api/send_photo', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                resolve();
+                            } else {
+                                reject('Calendar send error');
                             }
                         } catch (e) {
-                            console.error('Parse error:', e);
+                            reject(e);
                         }
-                    }
-                    
-                    if (!userId) {
-                        userId = localStorage.getItem('telegram_user_id');
-                    }
-                    
-                    if (!userId) {
-                        showToast('❌ Не удалось определить ID пользователя');
-                        return;
-                    }
-                    
-                    // Отправляем на сервер
-                    const formData = new FormData();
-                    formData.append('photo', blob, 'stats.png');
-                    formData.append('user_id', userId);
-                    
-                    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
-                                       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-                    formData.append('caption', `📊 Статистика за ${monthNames[currentMonth]} ${currentYear}`);
-                    
-                    showToast('📤 Отправляю в бот...');
-                    
-                    try {
-                        const response = await fetch('/api/send_photo', {
-                            method: 'POST',
-                            body: formData
-                        });
+                    }, 'image/png');
+                });
+                
+                showToast('✅ Календарь отправлен, создаю статистику...');
+                
+                // 2. Скриншот статистики
+                switchTab(1);
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const statsContent = document.getElementById('content1');
+                if (!statsContent) {
+                    showToast('❌ Ошибка: не найден контейнер статистики');
+                    return;
+                }
+                
+                const statsCanvas = await html2canvas(statsContent, {
+                    backgroundColor: '#18181b',
+                    scale: 2,
+                    logging: false,
+                    useCORS: true
+                });
+                
+                // Отправляем статистику
+                await new Promise((resolve, reject) => {
+                    statsCanvas.toBlob(async (blob) => {
+                        if (!blob) {
+                            reject('Stats blob error');
+                            return;
+                        }
                         
-                        if (response.ok) {
-                            showToast('✅ Статистика отправлена в бот!');
-                        } else {
-                            const error = await response.text();
-                            console.error('Server error:', error);
-                            showToast('❌ Ошибка отправки на сервер');
+                        const formData = new FormData();
+                        formData.append('photo', blob, 'stats.png');
+                        formData.append('user_id', userId);
+                        formData.append('caption', `📊 Статистика за ${monthNames[currentMonth]} ${currentYear}`);
+                        
+                        try {
+                            const response = await fetch('/api/send_photo', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                resolve();
+                            } else {
+                                reject('Stats send error');
+                            }
+                        } catch (e) {
+                            reject(e);
                         }
-                    } catch (e) {
-                        console.error('Send error:', e);
-                        showToast('❌ Ошибка сети');
-                    }
-                }, 'image/png');
+                    }, 'image/png');
+                });
+                
+                showToast('✅ Статистика отправлена в бот!');
                 
             } catch (e) {
-                console.error('Screenshot error:', e);
-                showToast('❌ Ошибка создания скриншота');
+                console.error('Share error:', e);
+                showToast('❌ Ошибка отправки');
             }
         }
 
