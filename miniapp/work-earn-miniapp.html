@@ -137,6 +137,10 @@
         body.light-theme .text-zinc-400 {
             color: #52525b !important;
         }
+
+        body.light-theme .text-zinc-500 {
+            color: #71717a !important;
+        }
         
         body.light-theme .border-zinc-800,
         body.light-theme .border-zinc-700 {
@@ -151,6 +155,16 @@
         
         body.light-theme .day-cell:hover:not(.work) {
             background-color: #e4e4e7;
+        }
+
+        body.light-theme input,
+        body.light-theme textarea,
+        body.light-theme select {
+            color: #18181b !important;
+        }
+
+        body.light-theme .mini-app {
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.15);
         }
     </style>
 </head>
@@ -204,6 +218,10 @@
             <div onclick="switchTab(4)" id="tab4"
                  class="tab-btn flex-1 py-[13px] text-center text-xs font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300 whitespace-nowrap px-2">
                 🗂️ История
+            </div>
+            <div onclick="switchTab(5)" id="tab5"
+                 class="tab-btn flex-1 py-[13px] text-center text-xs font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300 whitespace-nowrap px-2">
+                ⚙️ Настройки
             </div>
         </div>
 
@@ -489,6 +507,93 @@
                     Данные хранятся только в вашем браузере
                     <div class="w-px h-3 bg-zinc-700"></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="content5" class="hidden flex-1 overflow-auto p-5 space-y-4">
+            <div class="mb-4">
+                <div class="font-semibold text-lg mb-2">⚙️ Настройки</div>
+                <div class="text-xs text-zinc-400">Персонализация приложения</div>
+            </div>
+
+            <!-- Currency Settings -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="text-sm font-semibold mb-3">💱 Валюта</div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="changeCurrency('₽', 'RUB')" class="currency-select-btn p-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-center transition-all">
+                        <div class="text-2xl mb-1">₽</div>
+                        <div class="text-xs text-zinc-400">Рубль</div>
+                    </button>
+                    <button onclick="changeCurrency('$', 'USD')" class="currency-select-btn p-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-center transition-all">
+                        <div class="text-2xl mb-1">$</div>
+                        <div class="text-xs text-zinc-400">Доллар</div>
+                    </button>
+                    <button onclick="changeCurrency('€', 'EUR')" class="currency-select-btn p-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-center transition-all">
+                        <div class="text-2xl mb-1">€</div>
+                        <div class="text-xs text-zinc-400">Евро</div>
+                    </button>
+                    <button onclick="changeCurrency('₸', 'KZT')" class="currency-select-btn p-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-center transition-all">
+                        <div class="text-2xl mb-1">₸</div>
+                        <div class="text-xs text-zinc-400">Тенге</div>
+                    </button>
+                    <button onclick="changeCurrency('£', 'GBP')" class="currency-select-btn p-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-center transition-all">
+                        <div class="text-2xl mb-1">£</div>
+                        <div class="text-xs text-zinc-400">Фунт</div>
+                    </button>
+                    <button onclick="changeCurrency('¥', 'CNY')" class="currency-select-btn p-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-center transition-all">
+                        <div class="text-2xl mb-1">¥</div>
+                        <div class="text-xs text-zinc-400">Юань</div>
+                    </button>
+                </div>
+                <div class="mt-3 text-xs text-zinc-500">Текущая валюта: <span id="current-currency" class="text-emerald-400 font-semibold">₽ RUB</span></div>
+            </div>
+
+            <!-- Reminders -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="text-sm font-semibold mb-3">🔔 Напоминания</div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm">Ежедневное напоминание</div>
+                            <div class="text-xs text-zinc-500">Напоминать отмечать рабочие дни</div>
+                        </div>
+                        <label class="relative inline-block w-12 h-6">
+                            <input type="checkbox" id="reminder-toggle" onchange="toggleReminder()" class="sr-only peer">
+                            <div class="w-full h-full bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                        </label>
+                    </div>
+                    <div id="reminder-time-container" class="hidden">
+                        <div class="text-xs text-zinc-400 mb-2">Время напоминания</div>
+                        <input type="time" id="reminder-time" value="20:00" 
+                               class="w-full bg-zinc-700 text-white px-4 py-2 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                               onchange="updateReminderTime()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="text-sm font-semibold mb-3">🎨 Тема оформления</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="setTheme('dark')" id="theme-dark-btn" class="p-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-center transition-all border-2 border-transparent">
+                        <div class="text-2xl mb-1">🌙</div>
+                        <div class="text-xs">Тёмная</div>
+                    </button>
+                    <button onclick="setTheme('light')" id="theme-light-btn" class="p-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-center transition-all border-2 border-transparent">
+                        <div class="text-2xl mb-1">☀️</div>
+                        <div class="text-xs">Светлая</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export Data -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="text-sm font-semibold mb-3">📤 Экспорт данных</div>
+                <button onclick="exportData()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-sm font-medium">
+                    💾 Скачать все данные (JSON)
+                </button>
+                <div class="mt-2 text-xs text-zinc-500 text-center">Сохраните резервную копию ваших данных</div>
             </div>
         </div>
 
@@ -1449,7 +1554,7 @@
         }
 
         function switchTab(index) {
-            for (let i = 0; i <= 4; i++) {
+            for (let i = 0; i <= 5; i++) {
                 const tab = document.getElementById(`tab${i}`);
                 const content = document.getElementById(`content${i}`);
                 
@@ -1468,6 +1573,8 @@
                 renderExpenses();
             } else if (index === 4) {
                 renderHistory();
+            } else if (index === 5) {
+                updateSettingsUI();
             }
         }
 
@@ -1897,6 +2004,149 @@
                     setTimeout(() => confetti.remove(), 4000);
                 }, i * 100);
             }
+        }
+
+        // Settings functions
+        function changeCurrency(symbol, code) {
+            currency = symbol;
+            currencyCode = code;
+            localStorage.setItem('currency', currency);
+            localStorage.setItem('currencyCode', currencyCode);
+            updateCurrencyDisplay();
+            updateSettingsUI();
+            updateStats();
+            renderExpenses();
+            showToast(`✅ Валюта изменена: ${symbol} ${code}`);
+        }
+
+        function updateSettingsUI() {
+            const currentCurrencyEl = document.getElementById('current-currency');
+            if (currentCurrencyEl) {
+                currentCurrencyEl.textContent = `${currency} ${currencyCode}`;
+            }
+
+            // Update theme buttons
+            const isDark = !document.body.classList.contains('light-theme');
+            const darkBtn = document.getElementById('theme-dark-btn');
+            const lightBtn = document.getElementById('theme-light-btn');
+            
+            if (darkBtn && lightBtn) {
+                if (isDark) {
+                    darkBtn.classList.add('border-emerald-500', 'bg-emerald-900/30');
+                    darkBtn.classList.remove('border-transparent');
+                    lightBtn.classList.remove('border-emerald-500', 'bg-emerald-900/30');
+                    lightBtn.classList.add('border-transparent');
+                } else {
+                    lightBtn.classList.add('border-emerald-500', 'bg-emerald-900/30');
+                    lightBtn.classList.remove('border-transparent');
+                    darkBtn.classList.remove('border-emerald-500', 'bg-emerald-900/30');
+                    darkBtn.classList.add('border-transparent');
+                }
+            }
+
+            // Update reminder toggle
+            const reminderEnabled = localStorage.getItem('reminder_enabled') === 'true';
+            const reminderToggle = document.getElementById('reminder-toggle');
+            const reminderTimeContainer = document.getElementById('reminder-time-container');
+            
+            if (reminderToggle) {
+                reminderToggle.checked = reminderEnabled;
+            }
+            
+            if (reminderTimeContainer) {
+                if (reminderEnabled) {
+                    reminderTimeContainer.classList.remove('hidden');
+                } else {
+                    reminderTimeContainer.classList.add('hidden');
+                }
+            }
+
+            const reminderTime = localStorage.getItem('reminder_time') || '20:00';
+            const reminderTimeInput = document.getElementById('reminder-time');
+            if (reminderTimeInput) {
+                reminderTimeInput.value = reminderTime;
+            }
+        }
+
+        function setTheme(theme) {
+            const body = document.body;
+            const btn = document.getElementById('theme-toggle');
+            
+            if (theme === 'light') {
+                body.classList.add('light-theme');
+                if (btn) btn.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+                showToast('☀️ Светлая тема');
+            } else {
+                body.classList.remove('light-theme');
+                if (btn) btn.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+                showToast('🌙 Тёмная тема');
+            }
+            
+            updateSettingsUI();
+        }
+
+        function toggleReminder() {
+            const toggle = document.getElementById('reminder-toggle');
+            const container = document.getElementById('reminder-time-container');
+            const enabled = toggle.checked;
+            
+            localStorage.setItem('reminder_enabled', enabled);
+            
+            if (enabled) {
+                container.classList.remove('hidden');
+                showToast('🔔 Напоминания включены');
+                scheduleReminder();
+            } else {
+                container.classList.add('hidden');
+                showToast('🔕 Напоминания выключены');
+            }
+        }
+
+        function updateReminderTime() {
+            const timeInput = document.getElementById('reminder-time');
+            const time = timeInput.value;
+            localStorage.setItem('reminder_time', time);
+            showToast(`⏰ Время напоминания: ${time}`);
+            scheduleReminder();
+        }
+
+        function scheduleReminder() {
+            // This would integrate with Telegram Bot API
+            // For now, just show a toast
+            const time = localStorage.getItem('reminder_time') || '20:00';
+            console.log('Reminder scheduled for', time);
+        }
+
+        function exportData() {
+            const data = {
+                version: '2.0',
+                exportDate: new Date().toISOString(),
+                settings: {
+                    currency,
+                    currencyCode,
+                    workMode,
+                    dailyRate,
+                    passiveRate,
+                    monthlyGoal,
+                    monthlySalary
+                },
+                monthlyData,
+                notes
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `earnings-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('💾 Данные экспортированы');
         }
 
         // Onboarding functions
