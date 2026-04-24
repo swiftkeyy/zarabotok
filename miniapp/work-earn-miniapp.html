@@ -454,8 +454,8 @@
 
         <!-- Bottom controls -->
         <div class="border-t border-zinc-800 bg-zinc-950 px-5 py-4">
-            <div class="grid grid-cols-2 gap-3 mb-3">
-                <!-- Rate -->
+            <!-- Daily Rate Mode -->
+            <div id="controls-daily" class="grid grid-cols-2 gap-3 mb-3">
                 <div>
                     <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">СТАВКА ЗА РАБОЧИЙ ДЕНЬ</div>
                     <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-1">
@@ -466,7 +466,6 @@
                     </div>
                 </div>
                 
-                <!-- Passive -->
                 <div>
                     <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">ДОХОД В ДЕНЬ ОТДЫХА</div>
                     <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-1">
@@ -475,6 +474,27 @@
                                onchange="updatePassive()">
                         <span class="text-xl text-zinc-400 currency-symbol">₽</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Salary Mode -->
+            <div id="controls-salary" class="hidden mb-3">
+                <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1 px-1">ОКЛАД ЗА МЕСЯЦ</div>
+                <div class="flex items-center bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-2">
+                    <input type="number" id="salary-input" value="150000" 
+                           class="flex-1 bg-transparent text-3xl font-semibold focus:outline-none money" 
+                           onchange="updateSalary()">
+                    <span class="text-2xl text-zinc-400 currency-symbol">₽</span>
+                </div>
+                <div class="text-xs text-zinc-500 mt-2 px-1">Автоматически делится на рабочие дни</div>
+            </div>
+
+            <!-- Freelance Mode -->
+            <div id="controls-freelance" class="hidden mb-3">
+                <div class="bg-zinc-800 rounded-3xl p-4 text-center">
+                    <div class="text-2xl mb-2">🎯</div>
+                    <div class="font-semibold mb-1">Режим фриланса</div>
+                    <div class="text-xs text-zinc-400">Нажмите на день в календаре чтобы указать сумму заработка</div>
                 </div>
             </div>
             
@@ -644,6 +664,7 @@
                     dailyRate = parsed.dailyRate || 5000;
                     passiveRate = parsed.passiveRate || 0;
                     monthlyGoal = parsed.monthlyGoal || 150000;
+                    monthlySalary = parsed.monthlySalary || 150000;
                 } else {
                     console.log('ℹ️ No saved data, using defaults');
                 }
@@ -658,24 +679,36 @@
                     passiveRate = monthlyData[key].passiveRate || passiveRate;
                     expenses = monthlyData[key].expenses || [];
                     notes = monthlyData[key].notes || '';
+                    freelanceEarnings = monthlyData[key].freelanceEarnings || {};
+                    if (monthlyData[key].workMode) {
+                        workMode = monthlyData[key].workMode;
+                    }
+                    if (monthlyData[key].monthlySalary) {
+                        monthlySalary = monthlyData[key].monthlySalary;
+                    }
                 } else {
                     console.log('ℹ️ No data for current month, starting fresh');
                     workDaysSet = new Set();
                     expenses = [];
                     notes = '';
+                    freelanceEarnings = {};
                 }
                 
                 const rateInput = document.getElementById('rate-input');
                 const passiveInput = document.getElementById('passive-input');
                 const goalInput = document.getElementById('goal-input');
+                const salaryInput = document.getElementById('salary-input');
                 const notesTextarea = document.getElementById('notes-textarea');
                 
                 if (rateInput) rateInput.value = dailyRate;
                 if (passiveInput) passiveInput.value = passiveRate;
                 if (goalInput) goalInput.value = monthlyGoal;
+                if (salaryInput) salaryInput.value = monthlySalary;
                 if (notesTextarea) notesTextarea.value = notes;
                 
                 renderExpenses();
+                updateWorkModeControls();
+                updateCurrencyDisplay();
                 
                 console.log('✅ loadFromStorage completed successfully');
             } catch (e) {
@@ -707,6 +740,9 @@
                     earnings: earnings,
                     expenses: expenses,
                     notes: notes,
+                    workMode: workMode,
+                    monthlySalary: monthlySalary,
+                    freelanceEarnings: freelanceEarnings,
                     savedAt: new Date().toISOString()
                 };
                 
@@ -714,7 +750,11 @@
                     monthlyData: monthlyData,
                     dailyRate: dailyRate,
                     passiveRate: passiveRate,
-                    monthlyGoal: monthlyGoal
+                    monthlyGoal: monthlyGoal,
+                    workMode: workMode,
+                    monthlySalary: monthlySalary,
+                    currency: currency,
+                    currencyCode: currencyCode
                 }));
             } catch (e) {
                 console.error('Save error:', e);
@@ -725,7 +765,44 @@
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
             const workCount = workDaysSet.size;
             const restCount = daysInMonth - workCount;
-            return (workCount * dailyRate) + (restCount * passiveRate);
+            
+            if (workMode === 'salary') {
+                // Оклад: фиксированная сумма за месяц
+                return monthlySalary;
+            } else if (workMode === 'freelance') {
+                // Фриланс: сумма всех дней
+                let total = 0;
+                workDaysSet.forEach(day => {
+                    total += freelanceEarnings[day] || 0;
+                });
+                return total + (restCount * passiveRate);
+            } else {
+                // Daily: фиксированная ставка за день
+                return (workCount * dailyRate) + (restCount * passiveRate);
+            }
+        }
+
+        function updateSalary() {
+            const input = document.getElementById('salary-input');
+            monthlySalary = parseInt(input.value) || 0;
+            updateStats();
+            saveToStorage();
+        }
+
+        function updateWorkModeControls() {
+            // Hide all controls
+            document.getElementById('controls-daily').classList.add('hidden');
+            document.getElementById('controls-salary').classList.add('hidden');
+            document.getElementById('controls-freelance').classList.add('hidden');
+            
+            // Show current mode controls
+            if (workMode === 'salary') {
+                document.getElementById('controls-salary').classList.remove('hidden');
+            } else if (workMode === 'freelance') {
+                document.getElementById('controls-freelance').classList.remove('hidden');
+            } else {
+                document.getElementById('controls-daily').classList.remove('hidden');
+            }
         }
 
         function updateStats() {
@@ -892,11 +969,21 @@
                 const cell = document.createElement('div');
                 const isWork = workDaysSet.has(day);
                 
-                cell.className = `day-cell h-11 flex items-center justify-center text-sm font-medium rounded-2xl cursor-pointer select-none border ${isWork ? 
+                cell.className = `day-cell h-11 flex flex-col items-center justify-center text-sm font-medium rounded-2xl cursor-pointer select-none border ${isWork ? 
                     'bg-emerald-500 text-white shadow-md shadow-emerald-500/40 border-emerald-400' : 
                     'bg-zinc-800 border-zinc-700 hover:bg-zinc-700'}`;
                 
-                cell.innerHTML = `<span class="font-semibold">${day}</span>`;
+                // Show amount in freelance mode
+                if (workMode === 'freelance' && isWork && freelanceEarnings[day]) {
+                    const amount = freelanceEarnings[day];
+                    const shortAmount = amount >= 1000 ? (amount / 1000).toFixed(1) + 'k' : amount;
+                    cell.innerHTML = `
+                        <span class="font-semibold">${day}</span>
+                        <span class="text-[9px] opacity-80">${shortAmount}</span>
+                    `;
+                } else {
+                    cell.innerHTML = `<span class="font-semibold">${day}</span>`;
+                }
                 
                 if (isCurrent && day === todayNum) {
                     cell.classList.add('ring-2', 'ring-offset-2', 'ring-offset-zinc-900', 'ring-blue-400');
@@ -923,16 +1010,115 @@
         }
 
         function toggleWorkDay(day, cell) {
-            if (workDaysSet.has(day)) {
-                workDaysSet.delete(day);
-                cell.classList.remove('bg-emerald-500', 'text-white', 'shadow-md', 'shadow-emerald-500/40', 'border-emerald-400');
-                cell.classList.add('bg-zinc-800', 'border-zinc-700', 'hover:bg-zinc-700');
+            if (workMode === 'freelance') {
+                // Freelance mode: show amount input modal
+                if (workDaysSet.has(day)) {
+                    // Edit existing day
+                    showFreelanceModal(day, freelanceEarnings[day] || 0);
+                } else {
+                    // Add new day
+                    showFreelanceModal(day, 0);
+                }
             } else {
-                workDaysSet.add(day);
-                cell.classList.add('bg-emerald-500', 'text-white', 'shadow-md', 'shadow-emerald-500/40', 'border-emerald-400');
-                cell.classList.remove('bg-zinc-800', 'border-zinc-700', 'hover:bg-zinc-700');
+                // Daily/Salary mode: simple toggle
+                if (workDaysSet.has(day)) {
+                    workDaysSet.delete(day);
+                    cell.classList.remove('bg-emerald-500', 'text-white', 'shadow-md', 'shadow-emerald-500/40', 'border-emerald-400');
+                    cell.classList.add('bg-zinc-800', 'border-zinc-700', 'hover:bg-zinc-700');
+                } else {
+                    workDaysSet.add(day);
+                    cell.classList.add('bg-emerald-500', 'text-white', 'shadow-md', 'shadow-emerald-500/40', 'border-emerald-400');
+                    cell.classList.remove('bg-zinc-800', 'border-zinc-700', 'hover:bg-zinc-700');
+                }
+                updateStats();
             }
+        }
+
+        function showFreelanceModal(day, currentAmount) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-5';
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            
+            const isExisting = workDaysSet.has(day);
+            
+            modal.innerHTML = `
+                <div class="bg-zinc-900 rounded-3xl p-6 max-w-sm w-full">
+                    <div class="text-center mb-4">
+                        <div class="text-4xl mb-2">💰</div>
+                        <div class="font-display text-xl font-semibold">${day} ${getMonthName(currentMonth)}</div>
+                        <div class="text-sm text-zinc-400 mt-1">${isExisting ? 'Изменить' : 'Добавить'} заработок</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="text-xs text-zinc-400 mb-2">Сколько заработали?</div>
+                        <div class="flex items-center bg-zinc-800 border-2 border-emerald-500 rounded-2xl px-4 py-3">
+                            <input type="number" id="freelance-amount-input" value="${currentAmount}" 
+                                   class="flex-1 bg-transparent text-3xl font-semibold focus:outline-none money" 
+                                   placeholder="0">
+                            <span class="text-2xl text-zinc-400 currency-symbol">${currency}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        ${isExisting ? `
+                            <button onclick="removeFreelanceDay(${day}); this.closest('.fixed').remove();" 
+                                    class="py-3 bg-rose-900/30 hover:bg-rose-900/50 text-rose-400 rounded-2xl font-medium">
+                                🗑️ Удалить
+                            </button>
+                        ` : `
+                            <button onclick="this.closest('.fixed').remove();" 
+                                    class="py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl font-medium">
+                                Отмена
+                            </button>
+                        `}
+                        <button onclick="saveFreelanceDay(${day}); this.closest('.fixed').remove();" 
+                                class="py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-medium">
+                            ✅ Сохранить
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Focus input
+            setTimeout(() => {
+                const input = document.getElementById('freelance-amount-input');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function saveFreelanceDay(day) {
+            const input = document.getElementById('freelance-amount-input');
+            const amount = parseInt(input.value) || 0;
+            
+            if (amount > 0) {
+                workDaysSet.add(day);
+                freelanceEarnings[day] = amount;
+                showToast(`✅ ${day} ${getMonthName(currentMonth)}: ${formatCurrency(amount)}`);
+            } else {
+                workDaysSet.delete(day);
+                delete freelanceEarnings[day];
+            }
+            
+            renderCalendar();
             updateStats();
+            saveToStorage();
+        }
+
+        function removeFreelanceDay(day) {
+            workDaysSet.delete(day);
+            delete freelanceEarnings[day];
+            renderCalendar();
+            updateStats();
+            saveToStorage();
+            showToast('🗑️ День удалён');
+        }
+
+        function getMonthName(monthIndex) {
+            const names = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 
+                          'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+            return names[monthIndex];
         }
 
         function updateRate() {
@@ -983,21 +1169,32 @@
                 passiveRate = monthlyData[key].passiveRate || 0;
                 expenses = monthlyData[key].expenses || [];
                 notes = monthlyData[key].notes || '';
+                freelanceEarnings = monthlyData[key].freelanceEarnings || {};
+                if (monthlyData[key].workMode) {
+                    workMode = monthlyData[key].workMode;
+                }
+                if (monthlyData[key].monthlySalary) {
+                    monthlySalary = monthlyData[key].monthlySalary;
+                }
             } else {
                 workDaysSet = new Set();
                 expenses = [];
                 notes = '';
+                freelanceEarnings = {};
             }
             
             const rateInput = document.getElementById('rate-input');
             const passiveInput = document.getElementById('passive-input');
+            const salaryInput = document.getElementById('salary-input');
             const notesTextarea = document.getElementById('notes-textarea');
             
             if (rateInput) rateInput.value = dailyRate;
             if (passiveInput) passiveInput.value = passiveRate;
+            if (salaryInput) salaryInput.value = monthlySalary;
             if (notesTextarea) notesTextarea.value = notes;
             
             renderExpenses();
+            updateWorkModeControls();
         }
 
         function fillWeekdays() {
