@@ -313,10 +313,21 @@
                 
                 <div class="stat-card bg-zinc-800 rounded-3xl p-5">
                     <div class="w-full">
-                        <div class="text-xs uppercase tracking-widest text-zinc-400 mb-2">ЗАРАБОТОК</div>
-                        <div id="earnings" class="font-display text-[36px] font-bold leading-tight text-emerald-400 tabular-nums money">90 000</div>
-                        <div class="text-xs text-emerald-400/70 mt-1">₽ за месяц</div>
+                        <div class="text-xs uppercase tracking-widest text-zinc-400 mb-2">УЖЕ ЗАРАБОТАНО</div>
+                        <div id="earned-already" class="font-display text-[36px] font-bold leading-tight text-emerald-400 tabular-nums money">45 000</div>
+                        <div class="text-xs text-emerald-400/70 mt-1">₽ за прошедшие дни</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Planned earnings -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-xs uppercase tracking-widest text-zinc-400">ПЛАНИРУЕМЫЙ ЗАРАБОТОК</div>
+                        <div class="text-xs text-zinc-500 mt-0.5">Включая будущие дни</div>
+                    </div>
+                    <div id="planned-earnings" class="font-display text-3xl font-bold text-cyan-400 tabular-nums money">90 000 ₽</div>
                 </div>
             </div>
 
@@ -528,32 +539,65 @@
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
             const workCount = workDaysSet.size;
             const restCount = daysInMonth - workCount;
-            const earnings = calculateEarnings();
+            
+            // Планируемый заработок (все отмеченные дни)
+            const plannedEarnings = calculateEarnings();
+            
+            // Уже заработано (только прошедшие дни)
+            const today = new Date();
+            const isCurrentMonth = (today.getFullYear() === currentYear && today.getMonth() === currentMonth);
+            let earnedAlready = 0;
+            
+            if (isCurrentMonth) {
+                const currentDay = today.getDate();
+                let pastWorkDays = 0;
+                let pastRestDays = 0;
+                
+                for (let day = 1; day < currentDay; day++) {
+                    if (workDaysSet.has(day)) {
+                        pastWorkDays++;
+                    } else {
+                        pastRestDays++;
+                    }
+                }
+                
+                earnedAlready = (pastWorkDays * dailyRate) + (pastRestDays * passiveRate);
+            } else {
+                // Для прошлых месяцев показываем полную сумму
+                earnedAlready = plannedEarnings;
+            }
             
             const workEl = document.getElementById('work-days');
-            const earningsEl = document.getElementById('earnings');
+            const earnedAlreadyEl = document.getElementById('earned-already');
+            const plannedEarningsEl = document.getElementById('planned-earnings');
             const restEl = document.getElementById('rest-days');
             const passiveEl = document.getElementById('passive-earnings');
             const totalDaysEl = document.getElementById('total-days');
             
             if (workEl) workEl.innerHTML = `${workCount}<span class="text-base font-normal text-zinc-400">/${daysInMonth}</span>`;
-            if (earningsEl) {
-                const earningsText = earnings.toLocaleString('ru-RU');
-                // Адаптивный размер шрифта в зависимости от длины числа
-                if (earningsText.length > 9) {
-                    earningsEl.className = 'font-display text-[24px] font-bold leading-tight text-emerald-400 tabular-nums money';
-                } else if (earningsText.length > 7) {
-                    earningsEl.className = 'font-display text-[28px] font-bold leading-tight text-emerald-400 tabular-nums money';
+            
+            if (earnedAlreadyEl) {
+                const earnedText = earnedAlready.toLocaleString('ru-RU');
+                if (earnedText.length > 9) {
+                    earnedAlreadyEl.className = 'font-display text-[24px] font-bold leading-tight text-emerald-400 tabular-nums money';
+                } else if (earnedText.length > 7) {
+                    earnedAlreadyEl.className = 'font-display text-[28px] font-bold leading-tight text-emerald-400 tabular-nums money';
                 } else {
-                    earningsEl.className = 'font-display text-[36px] font-bold leading-tight text-emerald-400 tabular-nums money';
+                    earnedAlreadyEl.className = 'font-display text-[36px] font-bold leading-tight text-emerald-400 tabular-nums money';
                 }
-                earningsEl.innerHTML = earningsText;
+                earnedAlreadyEl.innerHTML = earnedText;
             }
+            
+            if (plannedEarningsEl) {
+                plannedEarningsEl.innerHTML = plannedEarnings.toLocaleString('ru-RU') + ' ₽';
+            }
+            
             if (restEl) restEl.innerHTML = restCount;
             if (passiveEl) passiveEl.innerHTML = (restCount * passiveRate).toLocaleString('ru-RU') + ' ₽';
             if (totalDaysEl) totalDaysEl.innerHTML = daysInMonth;
             
-            const progress = Math.min(Math.round((earnings / monthlyGoal) * 100), 100);
+            // Прогресс теперь считается от "уже заработано"
+            const progress = Math.min(Math.round((earnedAlready / monthlyGoal) * 100), 100);
             const bar = document.getElementById('progress-bar');
             const progressText = document.getElementById('progress-text');
             
@@ -569,7 +613,7 @@
             
             updateStreakDisplay();
             
-            if (progress >= 100 && earnings > 0) {
+            if (progress >= 100 && earnedAlready > 0) {
                 setTimeout(() => {
                     if (!document.getElementById('progress-text').classList.contains('celebrated')) {
                         celebrateConfetti();
