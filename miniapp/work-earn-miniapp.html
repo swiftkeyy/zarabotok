@@ -915,6 +915,9 @@
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200">
+    <!-- Theme Animations Container -->
+    <div id="theme-animations" class="fixed inset-0 pointer-events-none" style="z-index: 0;"></div>
+    
     <!-- Phone frame -->
     <div class="max-w-[420px] mx-auto min-h-screen bg-zinc-900 shadow-2xl overflow-hidden flex flex-col mini-app">
         
@@ -4371,7 +4374,49 @@
             localStorage.setItem('theme', theme);
             showToast(`${selectedTheme.icon} ${selectedTheme.name}`);
             
+            // Render theme animations
+            renderThemeAnimations(theme);
+            
             updateSettingsUI();
+        }
+
+        function renderThemeAnimations(theme) {
+            const container = document.getElementById('theme-animations');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (theme === 'space') {
+                // Create stars
+                for (let i = 0; i < 50; i++) {
+                    const star = document.createElement('div');
+                    star.style.cssText = `
+                        position: absolute;
+                        width: ${Math.random() * 3 + 1}px;
+                        height: ${Math.random() * 3 + 1}px;
+                        background: white;
+                        border-radius: 50%;
+                        top: ${Math.random() * 100}%;
+                        left: ${Math.random() * 100}%;
+                        opacity: ${Math.random() * 0.5 + 0.3};
+                        animation: starTwinkle ${Math.random() * 3 + 2}s ease-in-out infinite;
+                        animation-delay: ${Math.random() * 2}s;
+                    `;
+                    container.appendChild(star);
+                }
+                
+                // Create comet
+                const comet = document.createElement('div');
+                comet.style.cssText = `
+                    position: absolute;
+                    width: 4px;
+                    height: 120px;
+                    background: linear-gradient(to bottom, transparent, rgba(139, 92, 246, 0.9), transparent);
+                    box-shadow: 0 0 15px rgba(139, 92, 246, 0.8);
+                    animation: cometFly 8s linear infinite;
+                `;
+                container.appendChild(comet);
+            }
         }
 
         function toggleReminder() {
@@ -4872,6 +4917,11 @@
                 // Load theme
                 const savedTheme = localStorage.getItem('theme') || 'dark';
                 setTheme(savedTheme);
+                
+                // Render theme animations after a short delay
+                setTimeout(() => {
+                    renderThemeAnimations(savedTheme);
+                }, 100);
                 
                 console.log('📦 Loading data from storage...');
                 loadFromStorage();
