@@ -820,18 +820,35 @@
             
             if (isCurrentMonth) {
                 const currentDay = today.getDate();
-                let pastWorkDays = 0;
-                let pastRestDays = 0;
                 
-                for (let day = 1; day < currentDay; day++) {
-                    if (workDaysSet.has(day)) {
-                        pastWorkDays++;
-                    } else {
-                        pastRestDays++;
+                if (workMode === 'freelance') {
+                    // Фриланс: считаем реальные суммы за прошедшие дни
+                    for (let day = 1; day < currentDay; day++) {
+                        if (workDaysSet.has(day)) {
+                            earnedAlready += freelanceEarnings[day] || 0;
+                        } else {
+                            earnedAlready += passiveRate;
+                        }
                     }
+                } else if (workMode === 'salary') {
+                    // Оклад: пропорционально прошедшим дням
+                    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                    earnedAlready = Math.round((monthlySalary / daysInMonth) * (currentDay - 1));
+                } else {
+                    // Daily: фиксированная ставка
+                    let pastWorkDays = 0;
+                    let pastRestDays = 0;
+                    
+                    for (let day = 1; day < currentDay; day++) {
+                        if (workDaysSet.has(day)) {
+                            pastWorkDays++;
+                        } else {
+                            pastRestDays++;
+                        }
+                    }
+                    
+                    earnedAlready = (pastWorkDays * dailyRate) + (pastRestDays * passiveRate);
                 }
-                
-                earnedAlready = (pastWorkDays * dailyRate) + (pastRestDays * passiveRate);
             } else {
                 // Для прошлых месяцев показываем полную сумму
                 earnedAlready = plannedEarnings;
@@ -1888,6 +1905,9 @@
                 
                 console.log('📝 Setting up notes auto-save...');
                 setupNotesAutoSave();
+                
+                console.log('🔄 Updating work mode controls...');
+                updateWorkModeControls();
                 
                 console.log('✅ Mini App loaded successfully!');
             } catch (error) {
