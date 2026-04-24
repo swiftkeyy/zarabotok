@@ -317,9 +317,9 @@
                 
                 <div class="stat-card bg-zinc-800 rounded-3xl p-5">
                     <div class="w-full">
-                        <div class="text-xs uppercase tracking-widest text-zinc-400">ЗАРАБОТОК</div>
-                        <div id="earnings" class="font-display text-[42px] font-bold leading-none mt-1 text-emerald-400 tabular-nums money">90 000</div>
-                        <div class="text-xs text-emerald-400/70">₽ за месяц</div>
+                        <div class="text-xs uppercase tracking-widest text-zinc-400 mb-2">ЗАРАБОТОК</div>
+                        <div id="earnings" class="font-display text-[42px] font-bold leading-none text-emerald-400 tabular-nums money">90 000</div>
+                        <div class="text-xs text-emerald-400/70 mt-1">₽ за месяц</div>
                     </div>
                 </div>
             </div>
@@ -521,7 +521,16 @@
             const totalDaysEl = document.getElementById('total-days');
             
             if (workEl) workEl.innerHTML = `${workCount}<span class="text-base font-normal text-zinc-400">/${daysInMonth}</span>`;
-            if (earningsEl) earningsEl.innerHTML = earnings.toLocaleString('ru-RU');
+            if (earningsEl) {
+                const earningsText = earnings.toLocaleString('ru-RU');
+                // Уменьшаем шрифт если число слишком длинное
+                if (earningsText.length > 7) {
+                    earningsEl.className = 'font-display text-[32px] font-bold leading-none mt-1 text-emerald-400 tabular-nums money';
+                } else {
+                    earningsEl.className = 'font-display text-[42px] font-bold leading-none mt-1 text-emerald-400 tabular-nums money';
+                }
+                earningsEl.innerHTML = earningsText;
+            }
             if (restEl) restEl.innerHTML = restCount;
             if (passiveEl) passiveEl.innerHTML = (restCount * passiveRate).toLocaleString('ru-RU') + ' ₽';
             if (totalDaysEl) totalDaysEl.innerHTML = daysInMonth;
