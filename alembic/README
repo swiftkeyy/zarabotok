@@ -1,0 +1,23 @@
+Generic single-database configuration with support for both PostgreSQL and SQLite.
+
+This Alembic setup automatically detects the database type from environment variables:
+- DATABASE_URL: PostgreSQL connection string (Railway)
+- DB_PATH: SQLite database path (bothost.ru, default: /app/data/bot_data.db)
+
+Quick Commands:
+  alembic upgrade head     - Apply all migrations
+  alembic downgrade -1     - Rollback one migration
+  alembic current          - Show current version
+  alembic history          - Show migration history
+  alembic stamp head       - Mark DB as up-to-date (for existing databases)
+  alembic revision -m "msg" - Create new migration
+
+Or use the helper script:
+  python migrate.py upgrade
+  python migrate.py downgrade
+  python migrate.py current
+  python migrate.py history
+  python migrate.py stamp
+  python migrate.py create <name>
+
+See MIGRATIONS.md in the project root for detailed documentation.

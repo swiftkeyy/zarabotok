@@ -182,6 +182,183 @@ async def notify_admins_new_user(user: dict):
             await bot.send_message(admin_id, f"🆕 Новый пользователь: <b>{user['first_name']}</b>")
         except: pass
 
+# ================== GOALS MANAGEMENT ==================
+async def save_user_goals(user_id: int, goals_data: dict):
+    """Save user goals (weekly, monthly, yearly)"""
+    now = datetime.now()
+    
+    for goal_type, goal_info in goals_data.items():
+        if goal_type not in ['weekly', 'monthly', 'yearly']:
+            continue
+            
+        amount = goal_info.get('amount', 0)
+        enabled = goal_info.get('enabled', False)
+        
+        if USE_POSTGRES:
+            async with DB_POOL.acquire() as conn:
+                await conn.execute("""
+                    INSERT INTO goals (user_id, goal_type, amount, enabled, created_at)
+                    VALUES ($1, $2, $3, $4, $5)
+                    ON CONFLICT (user_id, goal_type) DO UPDATE SET
+                        amount = $3, enabled = $4, created_at = $5
+                """, user_id, goal_type, amount, enabled, now)
+        else:
+            async with aiosqlite.connect(DB_PATH) as db:
+                await db.execute("""
+                    INSERT OR REPLACE INTO goals (user_id, goal_type, amount, enabled, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (user_id, goal_type, amount, enabled, now.isoformat()))
+                await db.commit()
+
+async def get_user_goals(user_id: int) -> dict:
+    """Get user goals"""
+    goals = {'weekly': {'amount': 35000, 'enabled': False}, 
+             'monthly': {'amount': 150000, 'enabled': True}, 
+             'yearly': {'amount': 1800000, 'enabled': False}}
+    
+    if USE_POSTGRES:
+        async with DB_POOL.acquire() as conn:
+            rows = await conn.fetch("SELECT goal_type, amount, enabled FROM goals WHERE user_id = $1", user_id)
+            for row in rows:
+                goals[row['goal_type']] = {'amount': row['amount'], 'enabled': row['enabled']}
+    else:
+        async with aiosqlite.connect(DB_PATH) as db:
+            cursor = await db.execute("SELECT goal_type, amount, enabled FROM goals WHERE user_id = ?", (user_id,))
+            rows = await cursor.fetchall()
+            for row in rows:
+                goals[row[0]] = {'amount': row[1], 'enabled': bool(row[2])}
+    
+    return goals
+
+# ================== TAGS MANAGEMENT ==================
+async def save_day_tags(user_id: int, tags_data: dict):
+    """Save day tags from frontend format: {"2025-01-15": ["vacation", "overtime"], ...}"""
+    now = datetime.now()
+    
+    # Clear existing tags for this user
+    if USE_POSTGRES:
+        async with DB_POOL.acquire() as conn:
+            await conn.execute("DELETE FROM day_tags WHERE user_id = $1", user_id)
+            
+            # Insert new tags
+            for date_str, tags in tags_data.items():
+                for tag in tags:
+                    await conn.execute("""
+                        INSERT INTO day_tags (user_id, date, tag, created_at)
+                        VALUES ($1, $2, $3, $4)
+                        ON CONFLICT (user_id, date, tag) DO NOTHING
+                    """, user_id, date_str, tag, now)
+    else:
+        async with aiosqlite.connect(DB_PATH) as db:
+            await db.execute("DELETE FROM day_tags WHERE user_id = ?", (user_id,))
+            
+            for date_str, tags in tags_data.items():
+                for tag in tags:
+                    await db.execute("""
+                        INSERT OR IGNORE INTO day_tags (user_id, date, tag, created_at)
+                        VALUES (?, ?, ?, ?)
+                    """, (user_id, date_str, tag, now.isoformat()))
+            await db.commit()
+
+async def get_day_tags(user_id: int) -> dict:
+    """Get all day tags for user in format: {"2025-01-15": ["vacation"], ...}"""
+    tags_dict = {}
+    
+    if USE_POSTGRES:
+        async with DB_POOL.acquire() as conn:
+            rows = await conn.fetch("SELECT date, tag FROM day_tags WHERE user_id = $1", user_id)
+            for row in rows:
+                date_str = row['date']
+                if date_str not in tags_dict:
+                    tags_dict[date_str] = []
+                tags_dict[date_str].append(row['tag'])
+    else:
+        async with aiosqlite.connect(DB_PATH) as db:
+            cursor = await db.execute("SELECT date, tag FROM day_tags WHERE user_id = ?", (user_id,))
+            rows = await cursor.fetchall()
+            for row in rows:
+                date_str = row[0]
+                if date_str not in tags_dict:
+                    tags_dict[date_str] = []
+                tags_dict[date_str].append(row[1])
+    
+    return tags_dict
+
+# ================== COMMENTS MANAGEMENT ==================
+async def save_day_comments(user_id: int, comments_data: dict):
+    """Save day comments from frontend format: {"2025-01-15": "Met with client...", ...}"""
+    now = datetime.now()
+    
+    # Clear existing comments for this user
+    if USE_POSTGRES:
+        async with DB_POOL.acquire() as conn:
+            await conn.execute("DELETE FROM day_comments WHERE user_id = $1", user_id)
+            
+            # Insert new comments
+            for date_str, comment in comments_data.items():
+                if comment and len(comment) <= 500:  # Validate length
+                    await conn.execute("""
+                        INSERT INTO day_comments (user_id, date, comment, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5)
+                        ON CONFLICT (user_id, date) DO UPDATE SET
+                            comment = $3, updated_at = $5
+                    """, user_id, date_str, comment, now, now)
+    else:
+        async with aiosqlite.connect(DB_PATH) as db:
+            await db.execute("DELETE FROM day_comments WHERE user_id = ?", (user_id,))
+            
+            for date_str, comment in comments_data.items():
+                if comment and len(comment) <= 500:
+                    await db.execute("""
+                        INSERT OR REPLACE INTO day_comments (user_id, date, comment, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (user_id, date_str, comment, now.isoformat(), now.isoformat()))
+            await db.commit()
+
+async def get_day_comments(user_id: int) -> dict:
+    """Get all day comments for user in format: {"2025-01-15": "comment text", ...}"""
+    comments_dict = {}
+    
+    if USE_POSTGRES:
+        async with DB_POOL.acquire() as conn:
+            rows = await conn.fetch("SELECT date, comment FROM day_comments WHERE user_id = $1", user_id)
+            for row in rows:
+                comments_dict[row['date']] = row['comment']
+    else:
+        async with aiosqlite.connect(DB_PATH) as db:
+            cursor = await db.execute("SELECT date, comment FROM day_comments WHERE user_id = ?", (user_id,))
+            rows = await cursor.fetchall()
+            for row in rows:
+                comments_dict[row[0]] = row[1]
+    
+    return comments_dict
+
+# ================== SEARCH FUNCTIONS ==================
+async def search_comments(user_id: int, query: str) -> list:
+    """Search comments by query (case-insensitive)"""
+    results = []
+    query_lower = query.lower()
+    
+    if USE_POSTGRES:
+        async with DB_POOL.acquire() as conn:
+            rows = await conn.fetch("""
+                SELECT date, comment FROM day_comments 
+                WHERE user_id = $1 AND LOWER(comment) LIKE $2
+                ORDER BY date DESC
+            """, user_id, f"%{query_lower}%")
+            results = [{'date': row['date'], 'comment': row['comment']} for row in rows]
+    else:
+        async with aiosqlite.connect(DB_PATH) as db:
+            cursor = await db.execute("""
+                SELECT date, comment FROM day_comments 
+                WHERE user_id = ? AND LOWER(comment) LIKE ?
+                ORDER BY date DESC
+            """, (user_id, f"%{query_lower}%"))
+            rows = await cursor.fetchall()
+            results = [{'date': row[0], 'comment': row[1]} for row in rows]
+    
+    return results
+
 async def save_stats_from_miniapp(user_id: int, data: dict):
     now = datetime.now()
     
@@ -200,6 +377,18 @@ async def save_stats_from_miniapp(user_id: int, data: dict):
             """, (user_id, data.get("month"), data.get("work_days", 0), data.get("earnings", 0),
                   data.get("rate", 0), data.get("passive_rate", 0), now.isoformat()))
             await db.commit()
+
+    # Save goals if present
+    if 'goals' in data:
+        await save_user_goals(user_id, data['goals'])
+    
+    # Save tags if present
+    if 'dayTags' in data:
+        await save_day_tags(user_id, data['dayTags'])
+    
+    # Save comments if present
+    if 'dayComments' in data:
+        await save_day_comments(user_id, data['dayComments'])
 
     # Уведомления о достижениях
     earnings = data.get("earnings", 0)
@@ -491,8 +680,126 @@ async def help_cmd(message: Message):
         "1. Открой Mini App через кнопку ниже\n"
         "2. Заполняй статистику каждый месяц\n"
         "3. Отслеживай свой прогресс в календаре\n\n"
-        "💡 Бот будет напоминать тебе о сохранении статистики!",
+        "💡 Бот будет напоминать тебе о сохранении статистики!\n\n"
+        "<b>Команды:</b>\n"
+        "/stats - Показать статистику\n"
+        "/goal - Управление целями\n"
+        "/add_expense - Добавить расход",
         reply_markup=main_menu_keyboard()
+    )
+
+@dp.message(Command("stats"))
+async def stats_cmd(message: Message):
+    """Show user statistics"""
+    user_id = message.from_user.id
+    
+    # Get current month stats
+    current_month = datetime.now().strftime("%Y-%m")
+    
+    if USE_POSTGRES:
+        async with DB_POOL.acquire() as conn:
+            stats_row = await conn.fetchrow("""
+                SELECT work_days, earnings, rate, passive_rate 
+                FROM stats WHERE user_id = $1 AND month = $2
+                ORDER BY saved_at DESC LIMIT 1
+            """, user_id, current_month)
+    else:
+        async with aiosqlite.connect(DB_PATH) as db:
+            cursor = await db.execute("""
+                SELECT work_days, earnings, rate, passive_rate 
+                FROM stats WHERE user_id = ? AND month = ?
+                ORDER BY saved_at DESC LIMIT 1
+            """, (user_id, current_month))
+            stats_row = await cursor.fetchone()
+    
+    if not stats_row:
+        await message.answer("📊 Статистика за текущий месяц пока не сохранена.\nОткрой Mini App и добавь данные!")
+        return
+    
+    # Get goals
+    goals = await get_user_goals(user_id)
+    
+    # Format response
+    if USE_POSTGRES:
+        work_days = stats_row['work_days']
+        earnings = stats_row['earnings']
+    else:
+        work_days = stats_row[0]
+        earnings = stats_row[1]
+    
+    text = f"📊 <b>Статистика за {current_month}</b>\n\n"
+    text += f"💼 Рабочих дней: <b>{work_days}</b>\n"
+    text += f"💰 Заработано: <b>{earnings:,} ₽</b>\n\n"
+    
+    # Show goal progress
+    text += "<b>🎯 Прогресс по целям:</b>\n"
+    for goal_type, goal_data in goals.items():
+        if goal_data['enabled']:
+            progress = min(100, int((earnings / goal_data['amount']) * 100))
+            emoji = "✅" if progress >= 100 else "📈"
+            text += f"{emoji} {goal_type.capitalize()}: {progress}% ({earnings:,} / {goal_data['amount']:,} ₽)\n"
+    
+    await message.answer(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="📅 Открыть календарь", web_app=WebAppInfo(url=WEBAPP_URL))
+    ]]))
+
+@dp.message(Command("goal"))
+async def goal_cmd(message: Message):
+    """Manage goals"""
+    user_id = message.from_user.id
+    args = message.text.split(maxsplit=2)
+    
+    # Get current goals
+    goals = await get_user_goals(user_id)
+    
+    # If no arguments, show current goals
+    if len(args) == 1:
+        text = "<b>🎯 Твои цели:</b>\n\n"
+        for goal_type, goal_data in goals.items():
+            status = "✅ Активна" if goal_data['enabled'] else "❌ Отключена"
+            text += f"• {goal_type.capitalize()}: {goal_data['amount']:,} ₽ ({status})\n"
+        text += "\n<b>Использование:</b>\n/goal weekly 35000\n/goal monthly 150000\n/goal yearly 1800000"
+        await message.answer(text)
+        return
+    
+    # Update goal
+    if len(args) < 3:
+        await message.answer("❌ Неверный формат.\nИспользуй: /goal <weekly|monthly|yearly> <сумма>")
+        return
+    
+    goal_type = args[1].lower()
+    if goal_type not in ['weekly', 'monthly', 'yearly']:
+        await message.answer("❌ Неверный тип цели. Используй: weekly, monthly или yearly")
+        return
+    
+    try:
+        amount = int(args[2])
+        if amount <= 0:
+            raise ValueError
+    except:
+        await message.answer("❌ Неверная сумма. Укажи положительное число.")
+        return
+    
+    # Update goal
+    goals[goal_type]['amount'] = amount
+    goals[goal_type]['enabled'] = True
+    await save_user_goals(user_id, goals)
+    
+    await message.answer(f"✅ Цель обновлена!\n{goal_type.capitalize()}: {amount:,} ₽")
+
+@dp.message(Command("add_expense"))
+async def add_expense_cmd(message: Message):
+    """Add expense via bot command"""
+    await message.answer(
+        "💸 <b>Добавление расходов</b>\n\n"
+        "Для добавления расходов используй Mini App - там удобнее!\n"
+        "В приложении ты можешь:\n"
+        "• Добавлять расходы с категориями\n"
+        "• Просматривать историю\n"
+        "• Анализировать траты",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="📅 Открыть календарь", web_app=WebAppInfo(url=WEBAPP_URL))
+        ]])
     )
 
 @dp.message(Command("admin"))

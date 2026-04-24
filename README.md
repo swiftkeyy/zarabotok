@@ -8,6 +8,30 @@
 
 ---
 
+## 🗄️ Миграции базы данных
+
+Проект использует **Alembic** для управления схемой базы данных.
+
+### Быстрый старт с миграциями
+
+```bash
+# Применить все миграции
+python migrate.py upgrade
+
+# Откатить последнюю миграцию
+python migrate.py downgrade
+
+# Посмотреть текущую версию БД
+python migrate.py current
+
+# Создать новую миграцию
+python migrate.py create add_new_table
+```
+
+Подробнее см. [MIGRATIONS.md](MIGRATIONS.md)
+
+---
+
 ## 🚀 Пошаговый деплой на bothost.ru
 
 ### 1. Создай проект
@@ -18,6 +42,9 @@
 Загрузи в корень проекта:
 - `main.py`
 - `requirements.txt`
+- `migrate.py` (опционально, для миграций)
+- `alembic/` (папка с миграциями)
+- `alembic.ini` (конфигурация Alembic)
 - `work-earn-miniapp.html` → в папку `miniapp/`
 
 ### 3. Настрой переменные окружения
@@ -38,7 +65,21 @@ WEBAPP_URL=https://твой-бот.bothost.ru/miniapp/work-earn-miniapp.html
 pip install -r requirements.txt
 ```
 
-### 5. Запусти бота
+### 5. Примени миграции (опционально)
+
+Если у тебя уже есть база данных с таблицами, пропусти этот шаг.
+
+Для новой базы данных:
+```bash
+python migrate.py upgrade
+```
+
+Для существующей базы данных:
+```bash
+python migrate.py stamp
+```
+
+### 6. Запусти бота
 
 ```bash
 python main.py
@@ -53,6 +94,7 @@ python main.py
 - База автоматически создаётся в `/app/data/`
 - Все данные (пользователи, статистика, каналы) сохраняются после перезапуска
 - Не нужно подключать PostgreSQL
+- Миграции работают как с PostgreSQL (Railway), так и с SQLite (bothost.ru)
 
 ---
 
