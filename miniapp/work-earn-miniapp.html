@@ -476,6 +476,11 @@
                     </div>
                 </div>
             </div>
+            <button onclick="showWorkModeSelector()" 
+                    class="w-full mb-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-2xl flex items-center justify-center gap-x-2">
+                <span>🔄</span>
+                <span>Сменить режим работы</span>
+            </button>
 
             <!-- Salary Mode -->
             <div id="controls-salary" class="hidden mb-3">
@@ -488,6 +493,11 @@
                 </div>
                 <div class="text-xs text-zinc-500 mt-2 px-1">Автоматически делится на рабочие дни</div>
             </div>
+            <button onclick="showWorkModeSelector()" 
+                    class="w-full mb-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-2xl flex items-center justify-center gap-x-2">
+                <span>🔄</span>
+                <span>Сменить режим работы</span>
+            </button>
 
             <!-- Freelance Mode -->
             <div id="controls-freelance" class="hidden mb-3">
@@ -497,6 +507,11 @@
                     <div class="text-xs text-zinc-400">Нажмите на день в календаре чтобы указать сумму заработка</div>
                 </div>
             </div>
+            <button onclick="showWorkModeSelector()" 
+                    class="w-full mb-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-2xl flex items-center justify-center gap-x-2">
+                <span>🔄</span>
+                <span>Сменить режим работы</span>
+            </button>
             
             <button onclick="saveMonth()" 
                     class="w-full py-[15px] bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 active:scale-[0.985] transition-all text-white font-semibold text-base rounded-3xl flex items-center justify-center gap-x-2 shadow-lg shadow-emerald-500/30">
@@ -1864,6 +1879,80 @@
             document.querySelectorAll('.currency-symbol').forEach(el => {
                 el.textContent = currency;
             });
+        }
+
+        function showWorkModeSelector() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-5';
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            
+            modal.innerHTML = `
+                <div class="bg-zinc-900 rounded-3xl p-6 max-w-sm w-full">
+                    <div class="text-center mb-4">
+                        <div class="font-display text-xl font-semibold">Выберите режим работы</div>
+                        <div class="text-xs text-zinc-400 mt-1">Текущий: ${workMode === 'daily' ? 'Фиксированная ставка' : workMode === 'salary' ? 'Оклад' : 'Фриланс'}</div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <button onclick="changeWorkMode('daily'); this.closest('.fixed').remove();" 
+                                class="w-full p-3 ${workMode === 'daily' ? 'bg-emerald-900/30 border-2 border-emerald-500' : 'bg-zinc-800 border-2 border-transparent'} hover:bg-zinc-700 rounded-2xl text-left transition-all">
+                            <div class="flex items-start gap-3">
+                                <div class="text-xl">💵</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm">Фиксированная ставка</div>
+                                    <div class="text-xs text-zinc-400">Одинаковая сумма за каждый рабочий день</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="changeWorkMode('salary'); this.closest('.fixed').remove();" 
+                                class="w-full p-3 ${workMode === 'salary' ? 'bg-emerald-900/30 border-2 border-emerald-500' : 'bg-zinc-800 border-2 border-transparent'} hover:bg-zinc-700 rounded-2xl text-left transition-all">
+                            <div class="flex items-start gap-3">
+                                <div class="text-xl">📊</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm">Оклад</div>
+                                    <div class="text-xs text-zinc-400">Фиксированная сумма за месяц</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="changeWorkMode('freelance'); this.closest('.fixed').remove();" 
+                                class="w-full p-3 ${workMode === 'freelance' ? 'bg-emerald-900/30 border-2 border-emerald-500' : 'bg-zinc-800 border-2 border-transparent'} hover:bg-zinc-700 rounded-2xl text-left transition-all">
+                            <div class="flex items-start gap-3">
+                                <div class="text-xl">🎯</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm">Фриланс</div>
+                                    <div class="text-xs text-zinc-400">Разная сумма для каждого дня</div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <button onclick="this.closest('.fixed').remove();" 
+                            class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-sm">
+                        Отмена
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function changeWorkMode(newMode) {
+            workMode = newMode;
+            localStorage.setItem('workMode', workMode);
+            updateWorkModeControls();
+            updateStats();
+            renderCalendar();
+            saveToStorage();
+            
+            const modeNames = {
+                'daily': 'Фиксированная ставка',
+                'salary': 'Оклад',
+                'freelance': 'Фриланс'
+            };
+            
+            showToast(`✅ Режим изменён: ${modeNames[newMode]}`);
         }
 
         // Initialize on load
