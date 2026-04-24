@@ -4959,12 +4959,11 @@
                     annualReportBtn.textContent = `Годовой отчёт ${new Date().getFullYear()}`;
                 }
                 
-                // Initialize onboarding manager
-                onboardingManager.init();
-                
                 // Check if onboarding completed
                 const onboardingCompleted = localStorage.getItem('onboarding_completed');
                 if (!onboardingCompleted) {
+                    // Initialize onboarding manager and show modal
+                    onboardingManager.init();
                     return; // Onboarding manager will handle showing the modal
                 }
                 
