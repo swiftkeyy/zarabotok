@@ -662,6 +662,252 @@
                 display: none;
             }
         }
+
+        /* THEME ANIMATIONS - 120FPS GPU ACCELERATED */
+        
+        /* Dark theme - floating shadows */
+        @keyframes darkFloat {
+            0%, 100% { 
+                transform: translate3d(0, 0, 0) scale(1);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translate3d(20px, -30px, 0) scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        body.dark-theme::before,
+        body:not([class*="-theme"])::before {
+            content: '';
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent);
+            border-radius: 50%;
+            top: 20%;
+            left: 10%;
+            animation: darkFloat 8s ease-in-out infinite;
+            pointer-events: none;
+            will-change: transform, opacity;
+            z-index: 0;
+        }
+
+        /* Light theme - sun rays */
+        @keyframes sunRays {
+            0% { 
+                transform: rotate(0deg) scale(1);
+                opacity: 0.1;
+            }
+            50% { 
+                opacity: 0.2;
+            }
+            100% { 
+                transform: rotate(360deg) scale(1.1);
+                opacity: 0.1;
+            }
+        }
+
+        body.light-theme::before {
+            content: '';
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: conic-gradient(from 0deg, transparent, #fbbf24, transparent, #fbbf24, transparent);
+            top: -200px;
+            right: -200px;
+            animation: sunRays 20s linear infinite;
+            pointer-events: none;
+            will-change: transform;
+            z-index: 0;
+        }
+
+        /* Space theme - stars and comets */
+        @keyframes starTwinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes cometFly {
+            0% { 
+                transform: translate3d(-100px, -100px, 0) rotate(45deg);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { 
+                transform: translate3d(calc(100vw + 100px), calc(100vh + 100px), 0) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        body.space-theme::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, white, transparent),
+                radial-gradient(2px 2px at 60% 70%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 90% 60%, white, transparent),
+                radial-gradient(1px 1px at 33% 80%, white, transparent);
+            background-size: 200% 200%;
+            animation: starTwinkle 3s ease-in-out infinite;
+            pointer-events: none;
+            will-change: opacity;
+            z-index: 0;
+        }
+
+        body.space-theme::after {
+            content: '';
+            position: fixed;
+            width: 3px;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, #8b5cf6, transparent);
+            box-shadow: 0 0 10px #8b5cf6;
+            animation: cometFly 8s linear infinite;
+            pointer-events: none;
+            will-change: transform;
+            z-index: 0;
+        }
+
+        /* Spring theme - falling petals */
+        @keyframes petalFall {
+            0% {
+                transform: translate3d(0, -10vh, 0) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translate3d(100px, 110vh, 0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        body.spring-theme::before,
+        body.spring-theme::after {
+            content: '🌸';
+            position: fixed;
+            font-size: 20px;
+            animation: petalFall 10s linear infinite;
+            pointer-events: none;
+            will-change: transform;
+            z-index: 0;
+        }
+
+        body.spring-theme::before {
+            left: 20%;
+            animation-delay: 0s;
+        }
+
+        body.spring-theme::after {
+            left: 70%;
+            animation-delay: 5s;
+        }
+
+        /* Summer theme - sun glare */
+        @keyframes summerGlare {
+            0%, 100% {
+                transform: translate3d(-50%, -50%, 0) scale(1);
+                opacity: 0.1;
+            }
+            50% {
+                transform: translate3d(-50%, -50%, 0) scale(1.3);
+                opacity: 0.3;
+            }
+        }
+
+        body.summer-theme::before {
+            content: '';
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(251, 146, 60, 0.3), transparent);
+            top: 50%;
+            left: 50%;
+            animation: summerGlare 6s ease-in-out infinite;
+            pointer-events: none;
+            will-change: transform, opacity;
+            z-index: 0;
+        }
+
+        /* Autumn theme - falling leaves */
+        @keyframes leafFall {
+            0% {
+                transform: translate3d(0, -10vh, 0) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translate3d(-50px, 110vh, 0) rotate(-360deg);
+                opacity: 0;
+            }
+        }
+
+        body.autumn-theme::before,
+        body.autumn-theme::after {
+            content: '🍂';
+            position: fixed;
+            font-size: 24px;
+            animation: leafFall 12s ease-in-out infinite;
+            pointer-events: none;
+            will-change: transform;
+            z-index: 0;
+        }
+
+        body.autumn-theme::before {
+            left: 30%;
+            animation-delay: 0s;
+        }
+
+        body.autumn-theme::after {
+            left: 60%;
+            animation-delay: 6s;
+        }
+
+        /* Winter theme - falling snow */
+        @keyframes snowFall {
+            0% {
+                transform: translate3d(0, -10vh, 0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translate3d(30px, 110vh, 0);
+                opacity: 0;
+            }
+        }
+
+        body.winter-theme::before,
+        body.winter-theme::after {
+            content: '❄️';
+            position: fixed;
+            font-size: 18px;
+            animation: snowFall 8s linear infinite;
+            pointer-events: none;
+            will-change: transform;
+            z-index: 0;
+        }
+
+        body.winter-theme::before {
+            left: 25%;
+            animation-delay: 0s;
+        }
+
+        body.winter-theme::after {
+            left: 75%;
+            animation-delay: 4s;
+        }
+
+        /* Ensure content is above animations */
+        .mini-app {
+            position: relative;
+            z-index: 1;
+        }
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200">
