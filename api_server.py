@@ -5,6 +5,12 @@ API сервер для получения данных пользователе
 import os
 import asyncio
 from aiohttp import web
+from aiogram import Bot
+from aiogram.types import BufferedInputFile
+
+# Bot token
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+bot = Bot(token=BOT_TOKEN) if BOT_TOKEN else None
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -58,11 +64,49 @@ async def api_get_user_data(request):
         print(f"API error: {e}")
         return web.json_response({"error": str(e)}, status=500)
 
+async def api_send_photo(request):
+    """API endpoint для отправки фото в бот"""
+    try:
+        if not bot:
+            return web.json_response({"error": "Bot not configured"}, status=500)
+        
+        reader = await request.multipart()
+        
+        user_id = None
+        caption = None
+        photo_data = None
+        
+        async for field in reader:
+            if field.name == 'user_id':
+                user_id = int(await field.text())
+            elif field.name == 'caption':
+                caption = await field.text()
+            elif field.name == 'photo':
+                photo_data = await field.read()
+        
+        if not user_id or not photo_data:
+            return web.json_response({"error": "Missing user_id or photo"}, status=400)
+        
+        # Отправляем фото пользователю
+        photo_file = BufferedInputFile(photo_data, filename="stats.png")
+        await bot.send_photo(
+            chat_id=user_id,
+            photo=photo_file,
+            caption=caption or "📊 Ваша статистика"
+        )
+        
+        return web.json_response({"success": True, "message": "Photo sent"})
+    
+    except Exception as e:
+        print(f"Send photo error: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
 async def main():
     await init_db()
     
     app = web.Application()
     app.router.add_get('/api/user/{user_id}', api_get_user_data)
+    app.router.add_post('/api/send_photo', api_send_photo)
     
     runner = web.AppRunner(app)
     await runner.setup()

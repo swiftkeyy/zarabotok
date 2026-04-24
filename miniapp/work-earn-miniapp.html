@@ -7,6 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
         
@@ -406,8 +407,14 @@
                 <span>Сохранить этот месяц</span>
             </button>
             
+            <button onclick="shareStats()" 
+                    class="mt-2 w-full py-3 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-white font-medium text-sm rounded-3xl flex items-center justify-center gap-x-2 transition-all border border-zinc-700">
+                <span>📤</span>
+                <span>Поделиться статистикой</span>
+            </button>
+            
             <div class="text-center mt-2">
-                <div class="text-[9px] text-zinc-500">Данные сохраняются локально и отправляются в бот</div>
+                <div class="text-[9px] text-zinc-500">Данные сохраняются локально</div>
             </div>
         </div>
     </div>
@@ -773,37 +780,103 @@
             celebrateConfetti();
         }
 
-        function sendStatsToBot() {
+        async function shareStats() {
             if (!tg) {
                 showToast('❌ Telegram WebApp не доступен');
                 return;
             }
             
-            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
-                               'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            showToast('📸 Создаю скриншот...');
             
-            const data = {
-                month: `${monthNames[currentMonth]} ${currentYear}`,
-                work_days: workDaysSet.size,
-                earnings: calculateEarnings(),
-                rate: dailyRate,
-                passive_rate: passiveRate
-            };
+            // Переключаемся на вкладку статистики если не там
+            switchTab(1);
             
-            // Показываем кнопку "Отправить" в Telegram
-            tg.MainButton.setText('📤 Отправить статистику');
-            tg.MainButton.show();
-            tg.MainButton.onClick(() => {
-                try {
-                    tg.sendData(JSON.stringify(data));
-                    tg.close();
-                } catch (e) {
-                    console.error('Send error:', e);
-                    showToast('❌ Ошибка отправки');
+            // Ждём рендеринга
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            try {
+                // Находим контейнер статистики
+                const statsContent = document.getElementById('content1');
+                if (!statsContent) {
+                    showToast('❌ Ошибка: не найден контейнер статистики');
+                    return;
                 }
-            });
-            
-            showToast('👆 Нажми кнопку "Отправить" внизу');
+                
+                // Создаём скриншот
+                const canvas = await html2canvas(statsContent, {
+                    backgroundColor: '#18181b',
+                    scale: 2,
+                    logging: false,
+                    useCORS: true
+                });
+                
+                // Конвертируем в blob
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        showToast('❌ Ошибка создания изображения');
+                        return;
+                    }
+                    
+                    // Получаем user_id из Telegram
+                    const tgUser = tg?.initDataUnsafe?.user;
+                    let userId = tgUser?.id;
+                    
+                    if (!userId && tg?.initData) {
+                        try {
+                            const params = new URLSearchParams(tg.initData);
+                            const userStr = params.get('user');
+                            if (userStr) {
+                                const user = JSON.parse(userStr);
+                                userId = user.id;
+                            }
+                        } catch (e) {
+                            console.error('Parse error:', e);
+                        }
+                    }
+                    
+                    if (!userId) {
+                        userId = localStorage.getItem('telegram_user_id');
+                    }
+                    
+                    if (!userId) {
+                        showToast('❌ Не удалось определить ID пользователя');
+                        return;
+                    }
+                    
+                    // Отправляем на сервер
+                    const formData = new FormData();
+                    formData.append('photo', blob, 'stats.png');
+                    formData.append('user_id', userId);
+                    
+                    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                                       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+                    formData.append('caption', `📊 Статистика за ${monthNames[currentMonth]} ${currentYear}`);
+                    
+                    showToast('📤 Отправляю в бот...');
+                    
+                    try {
+                        const response = await fetch('/api/send_photo', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (response.ok) {
+                            showToast('✅ Статистика отправлена в бот!');
+                        } else {
+                            const error = await response.text();
+                            console.error('Server error:', error);
+                            showToast('❌ Ошибка отправки на сервер');
+                        }
+                    } catch (e) {
+                        console.error('Send error:', e);
+                        showToast('❌ Ошибка сети');
+                    }
+                }, 'image/png');
+                
+            } catch (e) {
+                console.error('Screenshot error:', e);
+                showToast('❌ Ошибка создания скриншота');
+            }
         }
 
         function switchTab(index) {
