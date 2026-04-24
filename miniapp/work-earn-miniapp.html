@@ -441,21 +441,31 @@
 
         function loadFromStorage() {
             try {
+                console.log('📂 Attempting to load from localStorage...');
                 const saved = localStorage.getItem('workEarnData_v2');
+                console.log('💾 Raw data:', saved ? 'Found' : 'Not found');
+                
                 if (saved) {
                     const parsed = JSON.parse(saved);
+                    console.log('✅ Parsed data:', parsed);
                     monthlyData = parsed.monthlyData || {};
                     dailyRate = parsed.dailyRate || 5000;
                     passiveRate = parsed.passiveRate || 0;
                     monthlyGoal = parsed.monthlyGoal || 150000;
+                } else {
+                    console.log('ℹ️ No saved data, using defaults');
                 }
                 
                 const key = getMonthKey();
+                console.log('🔑 Current month key:', key);
+                
                 if (monthlyData[key]) {
+                    console.log('📅 Found data for current month:', monthlyData[key]);
                     workDaysSet = new Set(monthlyData[key].workDays || []);
                     dailyRate = monthlyData[key].rate || dailyRate;
                     passiveRate = monthlyData[key].passiveRate || passiveRate;
                 } else {
+                    console.log('ℹ️ No data for current month, starting fresh');
                     workDaysSet = new Set();
                 }
                 
@@ -466,10 +476,20 @@
                 if (rateInput) rateInput.value = dailyRate;
                 if (passiveInput) passiveInput.value = passiveRate;
                 if (goalInput) goalInput.value = monthlyGoal;
+                
+                console.log('✅ loadFromStorage completed successfully');
             } catch (e) {
-                console.error('Storage error:', e);
+                console.error('❌ Storage load error:', e);
+                console.error('Stack trace:', e.stack);
+                
+                // Сброс к дефолтным значениям
                 monthlyData = {};
                 workDaysSet = new Set();
+                dailyRate = 5000;
+                passiveRate = 0;
+                monthlyGoal = 150000;
+                
+                showToast('⚠️ Ошибка загрузки данных. Используются значения по умолчанию.');
             }
         }
 
@@ -602,13 +622,21 @@
         }
 
         function renderCalendar() {
+            console.log('🎨 renderCalendar() called');
             const grid = document.getElementById('calendar-grid');
-            if (!grid) return;
+            if (!grid) {
+                console.error('❌ calendar-grid element not found!');
+                return;
+            }
+            console.log('✅ Found calendar-grid element');
+            
             grid.innerHTML = '';
             
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
             const firstDayRaw = new Date(currentYear, currentMonth, 1).getDay();
             const startOffset = (firstDayRaw === 0) ? 6 : firstDayRaw - 1;
+            
+            console.log(`📅 Rendering ${daysInMonth} days, offset: ${startOffset}`);
             
             for (let i = 0; i < startOffset; i++) {
                 const empty = document.createElement('div');
@@ -646,7 +674,12 @@
             const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
                                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
             const label = document.getElementById('month-label');
-            if (label) label.innerHTML = `${monthNames[currentMonth]} ${currentYear}`;
+            if (label) {
+                label.innerHTML = `${monthNames[currentMonth]} ${currentYear}`;
+                console.log(`✅ Calendar rendered: ${monthNames[currentMonth]} ${currentYear}`);
+            } else {
+                console.error('❌ month-label element not found!');
+            }
         }
 
         function toggleWorkDay(day, cell) {
@@ -1223,18 +1256,47 @@
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
-            // Load theme
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-theme');
-                const btn = document.getElementById('theme-toggle');
-                if (btn) btn.textContent = '☀️';
-            }
+            console.log('🚀 Mini App starting...');
             
-            loadFromStorage();
-            renderCalendar();
-            updateStats();
-            renderHistory();
+            try {
+                // Load theme
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'light') {
+                    document.body.classList.add('light-theme');
+                    const btn = document.getElementById('theme-toggle');
+                    if (btn) btn.textContent = '☀️';
+                }
+                
+                console.log('📦 Loading data from storage...');
+                loadFromStorage();
+                
+                console.log('📅 Rendering calendar...');
+                renderCalendar();
+                
+                console.log('📊 Updating stats...');
+                updateStats();
+                
+                console.log('📜 Rendering history...');
+                renderHistory();
+                
+                console.log('✅ Mini App loaded successfully!');
+            } catch (error) {
+                console.error('❌ CRITICAL ERROR during initialization:', error);
+                
+                // Показываем кнопку экстренного сброса
+                const emergencyBtn = document.createElement('div');
+                emergencyBtn.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white px-6 py-3 rounded-2xl shadow-lg cursor-pointer';
+                emergencyBtn.innerHTML = '⚠️ Ошибка загрузки. Нажмите для сброса данных';
+                emergencyBtn.onclick = () => {
+                    if (confirm('Сбросить все данные и перезагрузить приложение?')) {
+                        localStorage.clear();
+                        location.reload();
+                    }
+                };
+                document.body.appendChild(emergencyBtn);
+                
+                showToast('❌ Ошибка загрузки. Проверьте консоль.');
+            }
         });
     </script>
 </body>
