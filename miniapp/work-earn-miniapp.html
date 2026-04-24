@@ -1281,6 +1281,18 @@
                 </div>
             </div>
 
+            <!-- Reset Onboarding -->
+            <div class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/30 rounded-3xl p-5">
+                <div class="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <span>✨</span>
+                    <span>Новый онбординг</span>
+                </div>
+                <div class="text-xs text-zinc-400 mb-4">Посмотрите обновленное приветствие с крутыми анимациями и эффектами!</div>
+                <button onclick="resetOnboarding()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-2xl transition-all hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98]">
+                    🚀 Показать онбординг заново
+                </button>
+            </div>
+
             <!-- Export Data -->
             <div class="bg-zinc-800 rounded-3xl p-5">
                 <div class="text-sm font-semibold mb-3">📤 Экспорт данных</div>
@@ -4254,6 +4266,27 @@
             // For now, just show a toast
             const time = localStorage.getItem('reminder_time') || '20:00';
             console.log('Reminder scheduled for', time);
+        }
+
+        function resetOnboarding() {
+            // Remove onboarding completion flag
+            localStorage.removeItem('onboarding_completed');
+            
+            // Show onboarding modal
+            onboardingManager.state.currentStep = 1;
+            onboardingManager.state.selectedCurrency = null;
+            onboardingManager.state.selectedCurrencyCode = null;
+            onboardingManager.state.selectedWorkMode = null;
+            
+            // Reset step visibility
+            document.getElementById('onboarding-step-1').classList.remove('hidden');
+            document.getElementById('onboarding-step-2').classList.add('hidden');
+            document.getElementById('onboarding-step-3').classList.add('hidden');
+            
+            // Show modal
+            onboardingManager.show();
+            
+            showToast('✨ Приготовьтесь к крутому онбордингу!');
         }
 
         function exportData() {
