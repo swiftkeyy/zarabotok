@@ -423,6 +423,147 @@
         body.winter-theme select {
             color: inherit !important;
         }
+
+        /* Onboarding Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-30px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes checkmarkPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .onboarding-modal-anim {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .onboarding-step {
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .step-exit {
+            animation: slideOutLeft 0.3s ease-out forwards;
+        }
+
+        .step-enter {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+        }
+
+        .confirmation-checkmark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 40px;
+            height: 40px;
+            background: rgba(16, 185, 129, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .confirmation-checkmark.animate {
+            animation: checkmarkPop 0.6s ease-out forwards;
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+
+        /* Preview animations */
+        #currency-preview.visible,
+        #mode-preview.visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* Responsive design for onboarding */
+        @media (max-width: 640px) {
+            #onboarding-step-2 .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            #progress-indicator {
+                width: 90%;
+            }
+
+            .onboarding-step {
+                padding: 1.5rem 1rem !important;
+                padding-top: 5rem !important;
+            }
+
+            #skip-onboarding-btn {
+                top: 1rem;
+                right: 1rem;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200">
@@ -1235,64 +1376,88 @@
     </div>
 
     <!-- Onboarding Modal -->
-    <div id="onboarding-modal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-5">
-        <div class="bg-zinc-900 rounded-3xl max-w-md w-full overflow-hidden">
+    <div id="onboarding-modal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-5 onboarding-modal-anim">
+        <!-- Skip Button -->
+        <button id="skip-onboarding-btn" class="hidden absolute top-5 right-5 px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl text-white/70 hover:text-white/90 text-sm font-medium transition-all z-10" onclick="onboardingManager.skip()">
+            Пропустить
+        </button>
+
+        <div class="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-3xl max-w-md w-full overflow-hidden relative backdrop-blur-xl border border-white/10">
+            <!-- Progress Indicator -->
+            <div id="progress-indicator" class="absolute top-5 left-1/2 -translate-x-1/2 w-4/5 max-w-xs z-10">
+                <div class="bg-black/30 backdrop-blur-md rounded-full p-3 border border-white/10">
+                    <div class="h-1 bg-white/10 rounded-full overflow-hidden mb-2">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500" style="width: 33%"></div>
+                    </div>
+                    <div id="progress-text" class="text-center text-xs text-white/60 font-medium">Шаг 1 из 3</div>
+                </div>
+            </div>
+
             <!-- Step 1: Welcome -->
-            <div id="onboarding-step-1" class="p-8 text-center">
-                <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30">
+            <div id="onboarding-step-1" class="p-8 pt-24 text-center onboarding-step">
+                <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30 animate-pulse-slow">
                     <span class="text-5xl">💼</span>
                 </div>
                 <h2 class="font-display text-3xl font-bold mb-2">Добро пожаловать!</h2>
                 <p class="text-zinc-400 mb-6">Давайте настроим приложение под вас</p>
-                <button onclick="nextOnboardingStep(2)" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl">
+                <button onclick="onboardingManager.nextStep(2)" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30">
                     Начать настройку
                 </button>
             </div>
 
             <!-- Step 2: Currency Selection -->
-            <div id="onboarding-step-2" class="hidden p-8">
+            <div id="onboarding-step-2" class="hidden p-8 pt-24 onboarding-step">
                 <h2 class="font-display text-2xl font-bold mb-2">Выберите валюту</h2>
                 <p class="text-zinc-400 text-sm mb-6">В какой валюте вы получаете доход?</p>
                 
-                <div class="grid grid-cols-3 gap-3 mb-6">
-                    <button onclick="selectCurrency('₽', 'RUB')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <button onclick="onboardingManager.selectCurrency('₽', 'RUB', this)" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="text-3xl mb-1">₽</div>
                         <div class="text-xs text-zinc-400">Рубль</div>
                     </button>
-                    <button onclick="selectCurrency('$', 'USD')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                    <button onclick="onboardingManager.selectCurrency('$', 'USD', this)" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="text-3xl mb-1">$</div>
                         <div class="text-xs text-zinc-400">Доллар</div>
                     </button>
-                    <button onclick="selectCurrency('€', 'EUR')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                    <button onclick="onboardingManager.selectCurrency('€', 'EUR', this)" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="text-3xl mb-1">€</div>
                         <div class="text-xs text-zinc-400">Евро</div>
                     </button>
-                    <button onclick="selectCurrency('₸', 'KZT')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                    <button onclick="onboardingManager.selectCurrency('₸', 'KZT', this)" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="text-3xl mb-1">₸</div>
                         <div class="text-xs text-zinc-400">Тенге</div>
                     </button>
-                    <button onclick="selectCurrency('£', 'GBP')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                    <button onclick="onboardingManager.selectCurrency('£', 'GBP', this)" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="text-3xl mb-1">£</div>
                         <div class="text-xs text-zinc-400">Фунт</div>
                     </button>
-                    <button onclick="selectCurrency('¥', 'CNY')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                    <button onclick="onboardingManager.selectCurrency('¥', 'CNY', this)" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="text-3xl mb-1">¥</div>
                         <div class="text-xs text-zinc-400">Юань</div>
                     </button>
                 </div>
 
-                <button onclick="nextOnboardingStep(3)" id="currency-next-btn" disabled class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-2xl transition-all">
+                <!-- Currency Preview -->
+                <div id="currency-preview" class="hidden mb-4 p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-xl opacity-0 translate-y-2 transition-all duration-300">
+                    <div class="text-xs text-white/50 uppercase tracking-wide mb-1">Выбрано:</div>
+                    <div class="flex items-center gap-2">
+                        <span id="preview-symbol" class="text-2xl font-bold"></span>
+                        <span id="preview-name" class="text-sm text-white/90"></span>
+                    </div>
+                </div>
+
+                <button onclick="onboardingManager.nextStep(3)" id="currency-next-btn" disabled class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-2xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30 disabled:hover:translate-y-0 disabled:hover:shadow-none">
                     Далее
                 </button>
             </div>
 
             <!-- Step 3: Work Mode Selection -->
-            <div id="onboarding-step-3" class="hidden p-8">
+            <div id="onboarding-step-3" class="hidden p-8 pt-24 onboarding-step">
                 <h2 class="font-display text-2xl font-bold mb-2">Как вы работаете?</h2>
                 <p class="text-zinc-400 text-sm mb-6">Выберите режим расчета заработка</p>
                 
-                <div class="space-y-3 mb-6">
-                    <button onclick="selectWorkMode('daily')" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent">
+                <div class="space-y-3 mb-4">
+                    <button onclick="onboardingManager.selectWorkMode('daily', this)" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="flex items-start gap-3">
                             <div class="text-2xl">💵</div>
                             <div class="flex-1">
@@ -1302,7 +1467,7 @@
                         </div>
                     </button>
 
-                    <button onclick="selectWorkMode('salary')" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent">
+                    <button onclick="onboardingManager.selectWorkMode('salary', this)" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="flex items-start gap-3">
                             <div class="text-2xl">📊</div>
                             <div class="flex-1">
@@ -1312,7 +1477,7 @@
                         </div>
                     </button>
 
-                    <button onclick="selectWorkMode('freelance')" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent">
+                    <button onclick="onboardingManager.selectWorkMode('freelance', this)" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent hover:-translate-y-1 hover:shadow-lg">
                         <div class="flex items-start gap-3">
                             <div class="text-2xl">🎯</div>
                             <div class="flex-1">
@@ -1323,7 +1488,18 @@
                     </button>
                 </div>
 
-                <button onclick="completeOnboarding()" id="mode-next-btn" disabled class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-2xl transition-all">
+                <!-- Mode Preview -->
+                <div id="mode-preview" class="hidden mb-4 p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-xl opacity-0 translate-y-2 transition-all duration-300">
+                    <div class="flex items-center gap-3">
+                        <div id="mode-preview-icon" class="text-3xl"></div>
+                        <div class="flex-1">
+                            <div id="mode-preview-title" class="font-semibold text-sm mb-0.5"></div>
+                            <div id="mode-preview-example" class="text-xs text-white/60"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="onboardingManager.complete()" id="mode-next-btn" disabled class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-2xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30 disabled:hover:translate-y-0 disabled:hover:shadow-none">
                     Начать работу
                 </button>
             </div>
@@ -3835,82 +4011,290 @@
             showToast('💾 Данные экспортированы');
         }
 
-        // Onboarding functions
+        // Onboarding Manager
+        const onboardingManager = {
+            state: {
+                currentStep: 1,
+                totalSteps: 3,
+                selectedCurrency: null,
+                selectedCurrencyCode: null,
+                selectedWorkMode: null,
+                isAnimating: false
+            },
+
+            init() {
+                const completed = localStorage.getItem('onboarding_completed');
+                if (!completed) {
+                    this.show();
+                }
+            },
+
+            show() {
+                const modal = document.getElementById('onboarding-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    this.updateProgress();
+                    this.updateSkipButton();
+                }
+            },
+
+            nextStep(step) {
+                if (this.state.isAnimating) return;
+
+                this.state.isAnimating = true;
+                const currentStepEl = document.getElementById(`onboarding-step-${this.state.currentStep}`);
+                const nextStepEl = document.getElementById(`onboarding-step-${step}`);
+
+                if (!currentStepEl || !nextStepEl) {
+                    this.state.isAnimating = false;
+                    return;
+                }
+
+                // Exit animation
+                currentStepEl.classList.add('step-exit');
+
+                setTimeout(() => {
+                    currentStepEl.classList.add('hidden');
+                    currentStepEl.classList.remove('step-exit');
+
+                    // Enter animation
+                    nextStepEl.classList.remove('hidden');
+                    nextStepEl.classList.add('step-enter');
+
+                    this.state.currentStep = step;
+                    this.updateProgress();
+                    this.updateSkipButton();
+
+                    setTimeout(() => {
+                        nextStepEl.classList.remove('step-enter');
+                        this.state.isAnimating = false;
+                    }, 300);
+                }, 300);
+            },
+
+            updateProgress() {
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                const percentage = (this.state.currentStep / this.state.totalSteps) * 100;
+
+                if (progressBar) progressBar.style.width = `${percentage}%`;
+                if (progressText) progressText.textContent = `Шаг ${this.state.currentStep} из ${this.state.totalSteps}`;
+            },
+
+            updateSkipButton() {
+                const skipBtn = document.getElementById('skip-onboarding-btn');
+                if (skipBtn) {
+                    if (this.state.currentStep > 1) {
+                        skipBtn.classList.remove('hidden');
+                    } else {
+                        skipBtn.classList.add('hidden');
+                    }
+                }
+            },
+
+            selectCurrency(symbol, code, element) {
+                this.state.selectedCurrency = symbol;
+                this.state.selectedCurrencyCode = code;
+
+                // Update UI
+                document.querySelectorAll('.currency-btn').forEach(btn => {
+                    btn.classList.remove('border-emerald-500', 'bg-emerald-900/30');
+                    btn.classList.add('border-transparent');
+                });
+
+                element.classList.remove('border-transparent');
+                element.classList.add('border-emerald-500', 'bg-emerald-900/30');
+
+                // Show confirmation
+                this.showConfirmation(element);
+
+                // Update preview
+                this.updateCurrencyPreview(symbol, code);
+
+                // Enable next button
+                const nextBtn = document.getElementById('currency-next-btn');
+                if (nextBtn) nextBtn.disabled = false;
+            },
+
+            selectWorkMode(mode, element) {
+                this.state.selectedWorkMode = mode;
+
+                // Update UI
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.classList.remove('border-emerald-500', 'bg-emerald-900/30');
+                    btn.classList.add('border-transparent');
+                });
+
+                element.classList.remove('border-transparent');
+                element.classList.add('border-emerald-500', 'bg-emerald-900/30');
+
+                // Show confirmation
+                this.showConfirmation(element);
+
+                // Update preview
+                this.updateModePreview(mode);
+
+                // Enable complete button
+                const nextBtn = document.getElementById('mode-next-btn');
+                if (nextBtn) nextBtn.disabled = false;
+            },
+
+            showConfirmation(element) {
+                const checkmark = document.createElement('div');
+                checkmark.className = 'confirmation-checkmark';
+                checkmark.innerHTML = '✓';
+
+                element.style.position = 'relative';
+                element.appendChild(checkmark);
+
+                setTimeout(() => checkmark.classList.add('animate'), 10);
+                setTimeout(() => checkmark.remove(), 1000);
+            },
+
+            updateCurrencyPreview(symbol, code) {
+                const preview = document.getElementById('currency-preview');
+                const symbolEl = document.getElementById('preview-symbol');
+                const nameEl = document.getElementById('preview-name');
+
+                const currencyNames = {
+                    'RUB': 'Российский рубль',
+                    'USD': 'Доллар США',
+                    'EUR': 'Евро',
+                    'KZT': 'Казахстанский тенге',
+                    'GBP': 'Фунт стерлингов',
+                    'CNY': 'Китайский юань'
+                };
+
+                if (symbolEl) symbolEl.textContent = symbol;
+                if (nameEl) nameEl.textContent = currencyNames[code] || code;
+
+                if (preview) {
+                    preview.classList.remove('hidden');
+                    setTimeout(() => preview.classList.add('visible'), 10);
+                }
+            },
+
+            updateModePreview(mode) {
+                const preview = document.getElementById('mode-preview');
+                const iconEl = document.getElementById('mode-preview-icon');
+                const titleEl = document.getElementById('mode-preview-title');
+                const exampleEl = document.getElementById('mode-preview-example');
+
+                const modeData = {
+                    'daily': {
+                        icon: '💵',
+                        title: 'Фиксированная ставка',
+                        example: '5000₽ × 20 дней = 100,000₽'
+                    },
+                    'salary': {
+                        icon: '📊',
+                        title: 'Оклад',
+                        example: '150,000₽ в месяц'
+                    },
+                    'freelance': {
+                        icon: '🎯',
+                        title: 'Фриланс',
+                        example: 'Разная сумма каждый день'
+                    },
+                    'hourly': {
+                        icon: '⏰',
+                        title: 'Почасовая оплата',
+                        example: '500₽/час × 8 часов = 4,000₽'
+                    }
+                };
+
+                const data = modeData[mode];
+                if (data) {
+                    if (iconEl) iconEl.textContent = data.icon;
+                    if (titleEl) titleEl.textContent = data.title;
+                    if (exampleEl) exampleEl.textContent = data.example;
+
+                    if (preview) {
+                        preview.classList.remove('hidden');
+                        setTimeout(() => preview.classList.add('visible'), 10);
+                    }
+                }
+            },
+
+            skip() {
+                const defaults = {
+                    currency: '₽',
+                    currencyCode: 'RUB',
+                    workMode: 'daily'
+                };
+
+                this.saveSettings(defaults);
+                this.close();
+                showToast('⚡ Применены настройки по умолчанию');
+            },
+
+            complete() {
+                const settings = {
+                    currency: this.state.selectedCurrency,
+                    currencyCode: this.state.selectedCurrencyCode,
+                    workMode: this.state.selectedWorkMode
+                };
+
+                this.saveSettings(settings);
+                this.close();
+                showToast(`✅ Настройки сохранены! Валюта: ${settings.currency}`);
+            },
+
+            saveSettings(settings) {
+                localStorage.setItem('onboarding_completed', 'true');
+                localStorage.setItem('currency', settings.currency);
+                localStorage.setItem('currencyCode', settings.currencyCode);
+                localStorage.setItem('workMode', settings.workMode);
+
+                // Apply to app
+                currency = settings.currency;
+                currencyCode = settings.currencyCode;
+                workMode = settings.workMode;
+                updateCurrencyDisplay();
+            },
+
+            close() {
+                const modal = document.getElementById('onboarding-modal');
+                if (modal) {
+                    modal.classList.add('fade-out');
+
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('fade-out');
+                    }, 300);
+                }
+            }
+        };
+
+        // Legacy functions for backward compatibility
         let selectedCurrency = null;
         let selectedCurrencyCode = null;
         let selectedWorkMode = null;
 
         function showOnboarding() {
-            const modal = document.getElementById('onboarding-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                nextOnboardingStep(1);
-            }
+            onboardingManager.show();
         }
 
         function nextOnboardingStep(step) {
-            // Hide all steps
-            for (let i = 1; i <= 3; i++) {
-                const stepEl = document.getElementById(`onboarding-step-${i}`);
-                if (stepEl) stepEl.classList.add('hidden');
-            }
-            
-            // Show current step
-            const currentStep = document.getElementById(`onboarding-step-${step}`);
-            if (currentStep) currentStep.classList.remove('hidden');
+            onboardingManager.nextStep(step);
         }
 
         function selectCurrency(symbol, code) {
-            selectedCurrency = symbol;
-            selectedCurrencyCode = code;
-            
-            // Update UI
-            document.querySelectorAll('.currency-btn').forEach(btn => {
-                btn.classList.remove('border-emerald-500', 'bg-emerald-900/30');
-                btn.classList.add('border-transparent');
-            });
-            
-            event.currentTarget.classList.remove('border-transparent');
-            event.currentTarget.classList.add('border-emerald-500', 'bg-emerald-900/30');
-            
-            // Enable next button
-            document.getElementById('currency-next-btn').disabled = false;
+            const element = event?.currentTarget;
+            if (element) {
+                onboardingManager.selectCurrency(symbol, code, element);
+            }
         }
 
         function selectWorkMode(mode) {
-            selectedWorkMode = mode;
-            
-            // Update UI
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.remove('border-emerald-500', 'bg-emerald-900/30');
-                btn.classList.add('border-transparent');
-            });
-            
-            event.currentTarget.classList.remove('border-transparent');
-            event.currentTarget.classList.add('border-emerald-500', 'bg-emerald-900/30');
-            
-            // Enable next button
-            document.getElementById('mode-next-btn').disabled = false;
+            const element = event?.currentTarget;
+            if (element) {
+                onboardingManager.selectWorkMode(mode, element);
+            }
         }
 
         function completeOnboarding() {
-            // Save settings
-            currency = selectedCurrency;
-            currencyCode = selectedCurrencyCode;
-            workMode = selectedWorkMode;
-            
-            localStorage.setItem('onboarding_completed', 'true');
-            localStorage.setItem('currency', currency);
-            localStorage.setItem('currencyCode', currencyCode);
-            localStorage.setItem('workMode', workMode);
-            
-            // Hide modal
-            document.getElementById('onboarding-modal').classList.add('hidden');
-            
-            // Update UI with currency
-            updateCurrencyDisplay();
-            
-            showToast(`✅ Настройки сохранены! Валюта: ${currency}`);
+            onboardingManager.complete();
         }
 
         function updateCurrencyDisplay() {
@@ -4017,11 +4401,13 @@
                     annualReportBtn.textContent = `Годовой отчёт ${new Date().getFullYear()}`;
                 }
                 
+                // Initialize onboarding manager
+                onboardingManager.init();
+                
                 // Check if onboarding completed
                 const onboardingCompleted = localStorage.getItem('onboarding_completed');
                 if (!onboardingCompleted) {
-                    showOnboarding();
-                    return;
+                    return; // Onboarding manager will handle showing the modal
                 }
                 
                 // Load saved settings
