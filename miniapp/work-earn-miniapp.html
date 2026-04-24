@@ -462,7 +462,7 @@
                         <input type="number" id="rate-input" value="5000" 
                                class="flex-1 bg-transparent text-2xl font-semibold focus:outline-none money" 
                                onchange="updateRate()">
-                        <span class="text-xl text-zinc-400">₽</span>
+                        <span class="text-xl text-zinc-400 currency-symbol">₽</span>
                     </div>
                 </div>
                 
@@ -473,7 +473,7 @@
                         <input type="number" id="passive-input" value="0" 
                                class="flex-1 bg-transparent text-2xl font-semibold focus:outline-none money" 
                                onchange="updatePassive()">
-                        <span class="text-xl text-zinc-400">₽</span>
+                        <span class="text-xl text-zinc-400 currency-symbol">₽</span>
                     </div>
                 </div>
             </div>
@@ -499,6 +499,102 @@
     <!-- Toast container -->
     <div id="toast-container" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50"></div>
 
+    <!-- Onboarding Modal -->
+    <div id="onboarding-modal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-5">
+        <div class="bg-zinc-900 rounded-3xl max-w-md w-full overflow-hidden">
+            <!-- Step 1: Welcome -->
+            <div id="onboarding-step-1" class="p-8 text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30">
+                    <span class="text-5xl">💼</span>
+                </div>
+                <h2 class="font-display text-3xl font-bold mb-2">Добро пожаловать!</h2>
+                <p class="text-zinc-400 mb-6">Давайте настроим приложение под вас</p>
+                <button onclick="nextOnboardingStep(2)" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl">
+                    Начать настройку
+                </button>
+            </div>
+
+            <!-- Step 2: Currency Selection -->
+            <div id="onboarding-step-2" class="hidden p-8">
+                <h2 class="font-display text-2xl font-bold mb-2">Выберите валюту</h2>
+                <p class="text-zinc-400 text-sm mb-6">В какой валюте вы получаете доход?</p>
+                
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <button onclick="selectCurrency('₽', 'RUB')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                        <div class="text-3xl mb-1">₽</div>
+                        <div class="text-xs text-zinc-400">Рубль</div>
+                    </button>
+                    <button onclick="selectCurrency('$', 'USD')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                        <div class="text-3xl mb-1">$</div>
+                        <div class="text-xs text-zinc-400">Доллар</div>
+                    </button>
+                    <button onclick="selectCurrency('€', 'EUR')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                        <div class="text-3xl mb-1">€</div>
+                        <div class="text-xs text-zinc-400">Евро</div>
+                    </button>
+                    <button onclick="selectCurrency('₸', 'KZT')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                        <div class="text-3xl mb-1">₸</div>
+                        <div class="text-xs text-zinc-400">Тенге</div>
+                    </button>
+                    <button onclick="selectCurrency('£', 'GBP')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                        <div class="text-3xl mb-1">£</div>
+                        <div class="text-xs text-zinc-400">Фунт</div>
+                    </button>
+                    <button onclick="selectCurrency('¥', 'CNY')" class="currency-btn p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center transition-all border-2 border-transparent">
+                        <div class="text-3xl mb-1">¥</div>
+                        <div class="text-xs text-zinc-400">Юань</div>
+                    </button>
+                </div>
+
+                <button onclick="nextOnboardingStep(3)" id="currency-next-btn" disabled class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-2xl transition-all">
+                    Далее
+                </button>
+            </div>
+
+            <!-- Step 3: Work Mode Selection -->
+            <div id="onboarding-step-3" class="hidden p-8">
+                <h2 class="font-display text-2xl font-bold mb-2">Как вы работаете?</h2>
+                <p class="text-zinc-400 text-sm mb-6">Выберите режим расчета заработка</p>
+                
+                <div class="space-y-3 mb-6">
+                    <button onclick="selectWorkMode('daily')" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">💵</div>
+                            <div class="flex-1">
+                                <div class="font-semibold mb-1">Фиксированная ставка</div>
+                                <div class="text-xs text-zinc-400">Одинаковая сумма за каждый рабочий день</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button onclick="selectWorkMode('salary')" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">📊</div>
+                            <div class="flex-1">
+                                <div class="font-semibold mb-1">Оклад</div>
+                                <div class="text-xs text-zinc-400">Фиксированная сумма за месяц</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button onclick="selectWorkMode('freelance')" class="mode-btn w-full p-4 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-left transition-all border-2 border-transparent">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">🎯</div>
+                            <div class="flex-1">
+                                <div class="font-semibold mb-1">Фриланс</div>
+                                <div class="text-xs text-zinc-400">Разная сумма для каждого дня</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <button onclick="completeOnboarding()" id="mode-next-btn" disabled class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-2xl transition-all">
+                    Начать работу
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global state
         let currentYear = new Date().getFullYear();
@@ -511,6 +607,18 @@
         let chartInstance = null;
         let expenses = [];
         let notes = '';
+        
+        // New: Currency and work mode
+        let currency = '₽';
+        let currencyCode = 'RUB';
+        let workMode = 'daily'; // 'daily', 'salary', 'freelance'
+        let monthlySalary = 150000;
+        let freelanceEarnings = {}; // {day: amount}
+
+        // Helper function to format currency
+        function formatCurrency(amount) {
+            return amount.toLocaleString('ru-RU') + ' ' + currency;
+        }
 
         // Initialize Telegram WebApp
         let tg = window.Telegram?.WebApp;
@@ -677,11 +785,11 @@
             
             if (plannedEarningsEl) {
                 const plannedText = plannedEarnings.toLocaleString('ru-RU');
-                plannedEarningsEl.textContent = plannedText + ' ₽';
+                plannedEarningsEl.textContent = plannedText + ' ' + currency;
             }
             
             if (restEl) restEl.innerHTML = restCount;
-            if (passiveEl) passiveEl.innerHTML = (restCount * passiveRate).toLocaleString('ru-RU') + ' ₽';
+            if (passiveEl) passiveEl.innerHTML = formatCurrency(restCount * passiveRate);
             if (totalDaysEl) totalDaysEl.innerHTML = daysInMonth;
             
             // Прогресс теперь считается от "уже заработано"
@@ -1156,7 +1264,7 @@
                             <div class="text-xs text-zinc-500">${new Date(expense.date).toLocaleDateString('ru-RU')}</div>
                         </div>
                         <div class="flex items-center gap-x-3">
-                            <div class="font-semibold text-rose-400">${expense.amount.toLocaleString('ru-RU')} ₽</div>
+                            <div class="font-semibold text-rose-400">${formatCurrency(expense.amount)}</div>
                             <button onclick="deleteExpense(${expense.id})" 
                                     class="w-8 h-8 flex items-center justify-center bg-zinc-700 hover:bg-rose-900/50 rounded-xl text-sm">
                                 🗑️
@@ -1168,7 +1276,7 @@
             
             const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
             if (totalEl) {
-                totalEl.textContent = totalExpenses.toLocaleString('ru-RU') + ' ₽';
+                totalEl.textContent = formatCurrency(totalExpenses);
             }
             
             // Чистый доход = уже заработано - расходы
@@ -1196,7 +1304,7 @@
             
             const netIncome = earnedAlready - totalExpenses;
             if (netIncomeEl) {
-                netIncomeEl.textContent = netIncome.toLocaleString('ru-RU') + ' ₽';
+                netIncomeEl.textContent = formatCurrency(netIncome);
                 if (netIncome < 0) {
                     netIncomeEl.className = 'font-semibold text-rose-400 tabular-nums';
                 } else {
@@ -1459,11 +1567,108 @@
             }
         }
 
+        // Onboarding functions
+        let selectedCurrency = null;
+        let selectedCurrencyCode = null;
+        let selectedWorkMode = null;
+
+        function showOnboarding() {
+            const modal = document.getElementById('onboarding-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                nextOnboardingStep(1);
+            }
+        }
+
+        function nextOnboardingStep(step) {
+            // Hide all steps
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`onboarding-step-${i}`);
+                if (stepEl) stepEl.classList.add('hidden');
+            }
+            
+            // Show current step
+            const currentStep = document.getElementById(`onboarding-step-${step}`);
+            if (currentStep) currentStep.classList.remove('hidden');
+        }
+
+        function selectCurrency(symbol, code) {
+            selectedCurrency = symbol;
+            selectedCurrencyCode = code;
+            
+            // Update UI
+            document.querySelectorAll('.currency-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'bg-emerald-900/30');
+                btn.classList.add('border-transparent');
+            });
+            
+            event.currentTarget.classList.remove('border-transparent');
+            event.currentTarget.classList.add('border-emerald-500', 'bg-emerald-900/30');
+            
+            // Enable next button
+            document.getElementById('currency-next-btn').disabled = false;
+        }
+
+        function selectWorkMode(mode) {
+            selectedWorkMode = mode;
+            
+            // Update UI
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'bg-emerald-900/30');
+                btn.classList.add('border-transparent');
+            });
+            
+            event.currentTarget.classList.remove('border-transparent');
+            event.currentTarget.classList.add('border-emerald-500', 'bg-emerald-900/30');
+            
+            // Enable next button
+            document.getElementById('mode-next-btn').disabled = false;
+        }
+
+        function completeOnboarding() {
+            // Save settings
+            currency = selectedCurrency;
+            currencyCode = selectedCurrencyCode;
+            workMode = selectedWorkMode;
+            
+            localStorage.setItem('onboarding_completed', 'true');
+            localStorage.setItem('currency', currency);
+            localStorage.setItem('currencyCode', currencyCode);
+            localStorage.setItem('workMode', workMode);
+            
+            // Hide modal
+            document.getElementById('onboarding-modal').classList.add('hidden');
+            
+            // Update UI with currency
+            updateCurrencyDisplay();
+            
+            showToast(`✅ Настройки сохранены! Валюта: ${currency}`);
+        }
+
+        function updateCurrencyDisplay() {
+            // Update all currency symbols in the app
+            document.querySelectorAll('.currency-symbol').forEach(el => {
+                el.textContent = currency;
+            });
+        }
+
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Mini App starting...');
             
             try {
+                // Check if onboarding completed
+                const onboardingCompleted = localStorage.getItem('onboarding_completed');
+                if (!onboardingCompleted) {
+                    showOnboarding();
+                    return;
+                }
+                
+                // Load saved settings
+                currency = localStorage.getItem('currency') || '₽';
+                currencyCode = localStorage.getItem('currencyCode') || 'RUB';
+                workMode = localStorage.getItem('workMode') || 'daily';
+                
                 // Load theme
                 const savedTheme = localStorage.getItem('theme');
                 if (savedTheme === 'light') {
