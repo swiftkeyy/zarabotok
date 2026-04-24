@@ -406,15 +406,8 @@
                 <span>Сохранить этот месяц</span>
             </button>
             
-            <!-- Новая кнопка: отправка статистики в бот -->
-            <button onclick="sendStatsToBot()" 
-                    class="mt-2 w-full py-3 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-white font-medium text-sm rounded-3xl flex items-center justify-center gap-x-2 transition-all border border-zinc-700">
-                <span>📤</span>
-                <span>Отправить статистику в бот</span>
-            </button>
-            
             <div class="text-center mt-2">
-                <div class="text-[9px] text-zinc-500">Готово к использованию в Telegram • Данные локальные</div>
+                <div class="text-[9px] text-zinc-500">Данные сохраняются локально и отправляются в бот</div>
             </div>
         </div>
     </div>
@@ -751,8 +744,6 @@
         function saveMonth() {
             saveToStorage();
             renderHistory();
-            showToast('💾 Месяц сохранён!');
-            celebrateConfetti();
             
             // Автоматически отправляем данные в бот
             if (tg) {
@@ -770,10 +761,16 @@
                 try {
                     tg.sendData(JSON.stringify(data));
                     console.log('Data sent to bot:', data);
+                    showToast('💾 Месяц сохранён! 📤 Отправлено в бот');
                 } catch (e) {
                     console.error('Send error:', e);
+                    showToast('💾 Месяц сохранён локально');
                 }
+            } else {
+                showToast('💾 Месяц сохранён!');
             }
+            
+            celebrateConfetti();
         }
 
         function sendStatsToBot() {
