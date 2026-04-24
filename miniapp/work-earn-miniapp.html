@@ -367,6 +367,22 @@
                     <div class="text-xs text-orange-400/60">Не останавливайся!</div>
                 </div>
             </div>
+
+            <!-- Earnings Chart -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="text-sm font-semibold mb-3">📈 График заработка</div>
+                <div style="height: 200px;">
+                    <canvas id="earnings-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="bg-zinc-800 rounded-3xl p-5">
+                <div class="text-sm font-semibold mb-3">🏆 Достижения</div>
+                <div id="achievements-list" class="grid grid-cols-3 gap-2">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
         </div>
 
         <!-- HISTORY TAB -->
@@ -378,6 +394,22 @@
             
             <!-- Add expense form -->
             <div class="bg-zinc-800 rounded-3xl p-4 mb-4">
+                <div class="mb-2">
+                    <select id="expense-category" 
+                            class="w-full bg-zinc-700 text-white px-4 py-2 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-2">
+                        <option value="🍔 Еда">🍔 Еда</option>
+                        <option value="🚗 Транспорт">🚗 Транспорт</option>
+                        <option value="🏠 Жильё">🏠 Жильё</option>
+                        <option value="🎮 Развлечения">🎮 Развлечения</option>
+                        <option value="🛒 Покупки">🛒 Покупки</option>
+                        <option value="💊 Здоровье">💊 Здоровье</option>
+                        <option value="📚 Образование">📚 Образование</option>
+                        <option value="💼 Работа">💼 Работа</option>
+                        <option value="📱 Связь">📱 Связь</option>
+                        <option value="🎁 Подарки">🎁 Подарки</option>
+                        <option value="💳 Другое">💳 Другое</option>
+                    </select>
+                </div>
                 <div class="grid grid-cols-[1fr_auto] gap-2 mb-2">
                     <input type="text" id="expense-name" placeholder="Название расхода" 
                            class="bg-zinc-700 text-white px-4 py-2 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
@@ -393,6 +425,14 @@
             <!-- Expenses list -->
             <div id="expenses-list" class="space-y-2 mb-4">
                 <!-- Populated by JS -->
+            </div>
+
+            <!-- Expenses by category -->
+            <div id="expenses-by-category" class="bg-zinc-800 rounded-3xl p-4 mb-4">
+                <div class="text-sm font-semibold mb-3">📊 По категориям</div>
+                <div id="category-breakdown" class="space-y-2">
+                    <!-- Populated by JS -->
+                </div>
             </div>
             
             <!-- Total expenses -->
@@ -908,6 +948,8 @@
             }
             
             updateStreakDisplay();
+            initChart();
+            renderAchievements();
             
             if (progress >= 100 && earnedAlready > 0) {
                 setTimeout(() => {
@@ -1433,9 +1475,11 @@
         function addExpense() {
             const nameInput = document.getElementById('expense-name');
             const amountInput = document.getElementById('expense-amount');
+            const categorySelect = document.getElementById('expense-category');
             
             const name = nameInput.value.trim();
             const amount = parseInt(amountInput.value) || 0;
+            const category = categorySelect.value;
             
             if (!name || amount <= 0) {
                 showToast('⚠️ Заполните название и сумму');
@@ -1446,6 +1490,7 @@
                 id: Date.now(),
                 name: name,
                 amount: amount,
+                category: category,
                 date: new Date().toISOString()
             });
             
@@ -1471,6 +1516,7 @@
             const list = document.getElementById('expenses-list');
             const totalEl = document.getElementById('total-expenses');
             const netIncomeEl = document.getElementById('net-income');
+            const categoryBreakdown = document.getElementById('category-breakdown');
             
             if (!list) return;
             
@@ -1480,6 +1526,9 @@
                 list.innerHTML = expenses.map(expense => `
                     <div class="bg-zinc-800 rounded-2xl p-3 flex items-center justify-between">
                         <div class="flex-1">
+                            <div class="flex items-center gap-x-2 mb-1">
+                                <span class="text-sm">${expense.category || '💳 Другое'}</span>
+                            </div>
                             <div class="font-medium text-sm">${expense.name}</div>
                             <div class="text-xs text-zinc-500">${new Date(expense.date).toLocaleDateString('ru-RU')}</div>
                         </div>
@@ -1492,6 +1541,36 @@
                         </div>
                     </div>
                 `).join('');
+            }
+
+            // Group by category
+            const byCategory = {};
+            expenses.forEach(e => {
+                const cat = e.category || '💳 Другое';
+                if (!byCategory[cat]) byCategory[cat] = 0;
+                byCategory[cat] += e.amount;
+            });
+
+            if (categoryBreakdown && Object.keys(byCategory).length > 0) {
+                const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+                categoryBreakdown.innerHTML = Object.entries(byCategory)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([cat, amount]) => {
+                        const percent = Math.round((amount / totalExpenses) * 100);
+                        return `
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center gap-x-2 flex-1">
+                                    <span>${cat}</span>
+                                    <div class="flex-1 h-2 bg-zinc-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-rose-500" style="width: ${percent}%"></div>
+                                    </div>
+                                </div>
+                                <span class="font-semibold text-rose-400 ml-2">${formatCurrency(amount)}</span>
+                            </div>
+                        `;
+                    }).join('');
+            } else if (categoryBreakdown) {
+                categoryBreakdown.innerHTML = '<div class="text-center text-zinc-500 text-xs">Нет данных</div>';
             }
             
             const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -1635,6 +1714,39 @@
                 renderHistory();
                 showToast('🗑️ Все данные удалены');
             }
+        }
+
+        function renderAchievements() {
+            const list = document.getElementById('achievements-list');
+            if (!list) return;
+
+            const achievements = [
+                { id: 'first_day', emoji: '🎯', name: 'Первый день', check: () => workDaysSet.size >= 1 },
+                { id: 'week', emoji: '📅', name: '7 дней', check: () => workDaysSet.size >= 7 },
+                { id: 'two_weeks', emoji: '🔥', name: '14 дней', check: () => workDaysSet.size >= 14 },
+                { id: 'month', emoji: '💪', name: '30 дней', check: () => workDaysSet.size >= 30 },
+                { id: 'streak_3', emoji: '⚡', name: 'Серия 3', check: () => calculateLongestStreak() >= 3 },
+                { id: 'streak_7', emoji: '🌟', name: 'Серия 7', check: () => calculateLongestStreak() >= 7 },
+                { id: 'goal_50', emoji: '🎖️', name: 'Цель 50%', check: () => {
+                    const earned = calculateEarnings();
+                    return (earned / monthlyGoal) >= 0.5;
+                }},
+                { id: 'goal_100', emoji: '🏆', name: 'Цель 100%', check: () => {
+                    const earned = calculateEarnings();
+                    return (earned / monthlyGoal) >= 1.0;
+                }},
+                { id: 'saved_3', emoji: '💾', name: '3 месяца', check: () => Object.keys(monthlyData).length >= 3 }
+            ];
+
+            list.innerHTML = achievements.map(ach => {
+                const unlocked = ach.check();
+                return `
+                    <div class="bg-zinc-700 rounded-2xl p-3 text-center ${unlocked ? 'opacity-100' : 'opacity-30'}">
+                        <div class="text-3xl mb-1">${ach.emoji}</div>
+                        <div class="text-[10px] text-zinc-400">${ach.name}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function showMonthPicker() {
