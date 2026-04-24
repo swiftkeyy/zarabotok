@@ -184,17 +184,25 @@
         </div>
 
         <!-- Tabs -->
-        <div class="flex border-b border-zinc-800 bg-zinc-900">
+        <div class="flex border-b border-zinc-800 bg-zinc-900 overflow-x-auto">
             <div onclick="switchTab(0)" id="tab0"
-                 class="tab-btn flex-1 py-[13px] text-center text-sm font-semibold cursor-pointer border-b-[3px] border-emerald-500 text-emerald-400">
+                 class="tab-btn flex-1 py-[13px] text-center text-xs font-semibold cursor-pointer border-b-[3px] border-emerald-500 text-emerald-400 whitespace-nowrap px-2">
                 📅 Календарь
             </div>
             <div onclick="switchTab(1)" id="tab1"
-                 class="tab-btn flex-1 py-[13px] text-center text-sm font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300">
+                 class="tab-btn flex-1 py-[13px] text-center text-xs font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300 whitespace-nowrap px-2">
                 📊 Статистика
             </div>
             <div onclick="switchTab(2)" id="tab2"
-                 class="tab-btn flex-1 py-[13px] text-center text-sm font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300">
+                 class="tab-btn flex-1 py-[13px] text-center text-xs font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300 whitespace-nowrap px-2">
+                💸 Расходы
+            </div>
+            <div onclick="switchTab(3)" id="tab3"
+                 class="tab-btn flex-1 py-[13px] text-center text-xs font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300 whitespace-nowrap px-2">
+                📝 Заметки
+            </div>
+            <div onclick="switchTab(4)" id="tab4"
+                 class="tab-btn flex-1 py-[13px] text-center text-xs font-semibold cursor-pointer text-zinc-400 hover:text-zinc-300 whitespace-nowrap px-2">
                 🗂️ История
             </div>
         </div>
@@ -363,6 +371,69 @@
 
         <!-- HISTORY TAB -->
         <div id="content2" class="hidden flex-1 overflow-auto p-5">
+            <div class="mb-4">
+                <div class="font-semibold text-lg mb-2">💸 Расходы за месяц</div>
+                <div class="text-xs text-zinc-400">Отслеживайте свои траты</div>
+            </div>
+            
+            <!-- Add expense form -->
+            <div class="bg-zinc-800 rounded-3xl p-4 mb-4">
+                <div class="grid grid-cols-[1fr_auto] gap-2 mb-2">
+                    <input type="text" id="expense-name" placeholder="Название расхода" 
+                           class="bg-zinc-700 text-white px-4 py-2 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="number" id="expense-amount" placeholder="Сумма" 
+                           class="bg-zinc-700 text-white px-4 py-2 rounded-2xl text-sm w-28 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <button onclick="addExpense()" 
+                        class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-sm font-medium">
+                    ➕ Добавить расход
+                </button>
+            </div>
+            
+            <!-- Expenses list -->
+            <div id="expenses-list" class="space-y-2 mb-4">
+                <!-- Populated by JS -->
+            </div>
+            
+            <!-- Total expenses -->
+            <div class="bg-gradient-to-br from-rose-500/10 to-red-500/10 border border-rose-500/30 rounded-3xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-xs uppercase tracking-widest text-rose-400">ВСЕГО РАСХОДОВ</div>
+                        <div class="text-xs text-rose-400/60 mt-0.5">За текущий месяц</div>
+                    </div>
+                    <div id="total-expenses" class="font-display text-4xl font-bold text-rose-400 tabular-nums">0 ₽</div>
+                </div>
+            </div>
+            
+            <!-- Net income -->
+            <div class="mt-3 bg-zinc-800 rounded-3xl p-4">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-zinc-400">Чистый доход (заработано - расходы)</span>
+                    <span id="net-income" class="font-semibold text-emerald-400 tabular-nums">0 ₽</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTES TAB -->
+        <div id="content3" class="hidden flex-1 overflow-auto p-5 flex flex-col">
+            <div class="mb-4">
+                <div class="font-semibold text-lg mb-2">📝 Заметки</div>
+                <div class="text-xs text-zinc-400">Ваши мысли и планы</div>
+            </div>
+            
+            <textarea id="notes-textarea" 
+                      placeholder="Пишите здесь свои заметки, планы, идеи...&#10;&#10;Текст автоматически сохраняется."
+                      class="flex-1 bg-zinc-800 text-white p-4 rounded-3xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                      style="min-height: 400px;"></textarea>
+            
+            <div class="mt-3 text-center text-xs text-zinc-500">
+                💾 Автосохранение включено
+            </div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="content4" class="hidden flex-1 overflow-auto p-5">
             <div class="mb-4 flex items-center justify-between">
                 <div class="font-semibold">Сохранённые месяцы</div>
                 <div onclick="clearAllData()" class="text-xs px-3 py-1 bg-zinc-800 rounded-2xl cursor-pointer hover:bg-rose-900/50">🗑️ Очистить всё</div>
@@ -438,6 +509,8 @@
         let monthlyGoal = 150000;
         let monthlyData = {};
         let chartInstance = null;
+        let expenses = [];
+        let notes = '';
 
         // Initialize Telegram WebApp
         let tg = window.Telegram?.WebApp;
@@ -475,18 +548,26 @@
                     workDaysSet = new Set(monthlyData[key].workDays || []);
                     dailyRate = monthlyData[key].rate || dailyRate;
                     passiveRate = monthlyData[key].passiveRate || passiveRate;
+                    expenses = monthlyData[key].expenses || [];
+                    notes = monthlyData[key].notes || '';
                 } else {
                     console.log('ℹ️ No data for current month, starting fresh');
                     workDaysSet = new Set();
+                    expenses = [];
+                    notes = '';
                 }
                 
                 const rateInput = document.getElementById('rate-input');
                 const passiveInput = document.getElementById('passive-input');
                 const goalInput = document.getElementById('goal-input');
+                const notesTextarea = document.getElementById('notes-textarea');
                 
                 if (rateInput) rateInput.value = dailyRate;
                 if (passiveInput) passiveInput.value = passiveRate;
                 if (goalInput) goalInput.value = monthlyGoal;
+                if (notesTextarea) notesTextarea.value = notes;
+                
+                renderExpenses();
                 
                 console.log('✅ loadFromStorage completed successfully');
             } catch (e) {
@@ -499,6 +580,8 @@
                 dailyRate = 5000;
                 passiveRate = 0;
                 monthlyGoal = 150000;
+                expenses = [];
+                notes = '';
                 
                 showToast('⚠️ Ошибка загрузки данных. Используются значения по умолчанию.');
             }
@@ -514,6 +597,8 @@
                     passiveRate: passiveRate,
                     workDays: Array.from(workDaysSet),
                     earnings: earnings,
+                    expenses: expenses,
+                    notes: notes,
                     savedAt: new Date().toISOString()
                 };
                 
@@ -785,14 +870,23 @@
                 workDaysSet = new Set(monthlyData[key].workDays || []);
                 dailyRate = monthlyData[key].rate || 5000;
                 passiveRate = monthlyData[key].passiveRate || 0;
+                expenses = monthlyData[key].expenses || [];
+                notes = monthlyData[key].notes || '';
             } else {
                 workDaysSet = new Set();
+                expenses = [];
+                notes = '';
             }
             
             const rateInput = document.getElementById('rate-input');
             const passiveInput = document.getElementById('passive-input');
+            const notesTextarea = document.getElementById('notes-textarea');
+            
             if (rateInput) rateInput.value = dailyRate;
             if (passiveInput) passiveInput.value = passiveRate;
+            if (notesTextarea) notesTextarea.value = notes;
+            
+            renderExpenses();
         }
 
         function fillWeekdays() {
@@ -1033,7 +1127,7 @@
         }
 
         function switchTab(index) {
-            for (let i = 0; i <= 2; i++) {
+            for (let i = 0; i <= 4; i++) {
                 const tab = document.getElementById(`tab${i}`);
                 const content = document.getElementById(`content${i}`);
                 
@@ -1048,11 +1142,126 @@
                 }
             }
             
-            if (index === 1) {
-                // График удалён
-            } else if (index === 2) {
+            if (index === 2) {
+                renderExpenses();
+            } else if (index === 4) {
                 renderHistory();
             }
+        }
+
+        // Expenses functions
+        function addExpense() {
+            const nameInput = document.getElementById('expense-name');
+            const amountInput = document.getElementById('expense-amount');
+            
+            const name = nameInput.value.trim();
+            const amount = parseInt(amountInput.value) || 0;
+            
+            if (!name || amount <= 0) {
+                showToast('⚠️ Заполните название и сумму');
+                return;
+            }
+            
+            expenses.push({
+                id: Date.now(),
+                name: name,
+                amount: amount,
+                date: new Date().toISOString()
+            });
+            
+            nameInput.value = '';
+            amountInput.value = '';
+            
+            saveToStorage();
+            renderExpenses();
+            updateStats();
+            
+            showToast('✅ Расход добавлен');
+        }
+
+        function deleteExpense(id) {
+            expenses = expenses.filter(e => e.id !== id);
+            saveToStorage();
+            renderExpenses();
+            updateStats();
+            showToast('🗑️ Расход удалён');
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expenses-list');
+            const totalEl = document.getElementById('total-expenses');
+            const netIncomeEl = document.getElementById('net-income');
+            
+            if (!list) return;
+            
+            if (expenses.length === 0) {
+                list.innerHTML = '<div class="text-center text-zinc-500 py-8 text-sm">Нет расходов за этот месяц</div>';
+            } else {
+                list.innerHTML = expenses.map(expense => `
+                    <div class="bg-zinc-800 rounded-2xl p-3 flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="font-medium text-sm">${expense.name}</div>
+                            <div class="text-xs text-zinc-500">${new Date(expense.date).toLocaleDateString('ru-RU')}</div>
+                        </div>
+                        <div class="flex items-center gap-x-3">
+                            <div class="font-semibold text-rose-400">${expense.amount.toLocaleString('ru-RU')} ₽</div>
+                            <button onclick="deleteExpense(${expense.id})" 
+                                    class="w-8 h-8 flex items-center justify-center bg-zinc-700 hover:bg-rose-900/50 rounded-xl text-sm">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+            if (totalEl) {
+                totalEl.textContent = totalExpenses.toLocaleString('ru-RU') + ' ₽';
+            }
+            
+            // Чистый доход = уже заработано - расходы
+            const today = new Date();
+            const isCurrentMonth = (today.getFullYear() === currentYear && today.getMonth() === currentMonth);
+            let earnedAlready = 0;
+            
+            if (isCurrentMonth) {
+                const currentDay = today.getDate();
+                let pastWorkDays = 0;
+                let pastRestDays = 0;
+                
+                for (let day = 1; day < currentDay; day++) {
+                    if (workDaysSet.has(day)) {
+                        pastWorkDays++;
+                    } else {
+                        pastRestDays++;
+                    }
+                }
+                
+                earnedAlready = (pastWorkDays * dailyRate) + (pastRestDays * passiveRate);
+            } else {
+                earnedAlready = calculateEarnings();
+            }
+            
+            const netIncome = earnedAlready - totalExpenses;
+            if (netIncomeEl) {
+                netIncomeEl.textContent = netIncome.toLocaleString('ru-RU') + ' ₽';
+                if (netIncome < 0) {
+                    netIncomeEl.className = 'font-semibold text-rose-400 tabular-nums';
+                } else {
+                    netIncomeEl.className = 'font-semibold text-emerald-400 tabular-nums';
+                }
+            }
+        }
+
+        // Notes auto-save
+        function setupNotesAutoSave() {
+            const textarea = document.getElementById('notes-textarea');
+            if (!textarea) return;
+            
+            textarea.addEventListener('input', () => {
+                notes = textarea.value;
+                saveToStorage();
+            });
         }
 
         function renderHistory() {
@@ -1322,6 +1531,9 @@
                 
                 console.log('📜 Rendering history...');
                 renderHistory();
+                
+                console.log('📝 Setting up notes auto-save...');
+                setupNotesAutoSave();
                 
                 console.log('✅ Mini App loaded successfully!');
             } catch (error) {
