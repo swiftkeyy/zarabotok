@@ -2868,6 +2868,7 @@
         }
 
         function prevMonth() {
+            saveToStorage(); // Save current month data before switching
             currentMonth--;
             if (currentMonth < 0) {
                 currentMonth = 11;
@@ -2879,6 +2880,7 @@
         }
 
         function nextMonth() {
+            saveToStorage(); // Save current month data before switching
             currentMonth++;
             if (currentMonth > 11) {
                 currentMonth = 0;
