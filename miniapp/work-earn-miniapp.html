@@ -4529,23 +4529,6 @@
             container.innerHTML = '';
             console.log('Rendering animations for theme:', theme);
             
-            // Add test indicator
-            const testDiv = document.createElement('div');
-            testDiv.style.cssText = `
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                background: rgba(255, 0, 0, 0.5);
-                color: white;
-                padding: 5px 10px;
-                border-radius: 5px;
-                z-index: 9999;
-                font-size: 12px;
-                pointer-events: none;
-            `;
-            testDiv.textContent = `Theme: ${theme} | Animations: ON`;
-            container.appendChild(testDiv);
-            
             if (theme === 'space') {
                 // Create animated nebula background
                 const nebula1 = document.createElement('div');
@@ -5370,9 +5353,7 @@
             }
         });
 
-        // ========================================
-        // CANVAS ANIMATION SYSTEM - 60 FPS
-        // ========================================
+        // Canvas Animation System
         
         const bgCanvas = document.getElementById('bg-canvas');
         const fgCanvas = document.getElementById('fg-canvas');
