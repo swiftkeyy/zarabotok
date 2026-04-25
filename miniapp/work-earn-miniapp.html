@@ -172,45 +172,72 @@
 
         /* Space theme */
         body.space-theme {
-            background: linear-gradient(135deg, #1a0033 0%, #0a0015 50%, #1a0033 100%);
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(138, 43, 226, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0015 0%, #1a0033 25%, #2d1854 50%, #1a0033 75%, #0a0015 100%);
+            background-size: 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+            animation: cosmicMove 20s ease-in-out infinite;
             color: #e0d4ff;
+        }
+        
+        @keyframes cosmicMove {
+            0%, 100% {
+                background-position: 0% 0%, 100% 100%, 50% 50%, 0% 0%;
+            }
+            25% {
+                background-position: 100% 0%, 0% 100%, 25% 75%, 0% 0%;
+            }
+            50% {
+                background-position: 100% 100%, 0% 0%, 75% 25%, 0% 0%;
+            }
+            75% {
+                background-position: 0% 100%, 100% 0%, 50% 50%, 0% 0%;
+            }
         }
         
         body.space-theme .mini-app {
-            background: linear-gradient(135deg, #2d1b4e 0%, #1a0f2e 100%);
-            box-shadow: 0 0 80px rgba(138, 43, 226, 0.4);
+            background: linear-gradient(135deg, rgba(45, 27, 78, 0.95) 0%, rgba(26, 15, 46, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 80px rgba(138, 43, 226, 0.6), 0 0 120px rgba(99, 102, 241, 0.4);
         }
         
         body.space-theme .tg-header {
-            background: linear-gradient(to right, #3d2667, #2d1b4e);
-        }
-        
-        body.space-theme .bg-zinc-900 {
-            background: linear-gradient(135deg, #2d1b4e 0%, #1a0f2e 100%) !important;
-        }
-        
-        body.space-theme .bg-zinc-800 {
-            background: rgba(138, 43, 226, 0.15) !important;
+            background: linear-gradient(to right, rgba(61, 38, 103, 0.9), rgba(45, 27, 78, 0.9));
             backdrop-filter: blur(10px);
         }
         
+        body.space-theme .bg-zinc-900 {
+            background: linear-gradient(135deg, rgba(45, 27, 78, 0.8) 0%, rgba(26, 15, 46, 0.8) 100%) !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        body.space-theme .bg-zinc-800 {
+            background: rgba(138, 43, 226, 0.2) !important;
+            backdrop-filter: blur(15px);
+        }
+        
         body.space-theme .bg-zinc-700 {
-            background: rgba(138, 43, 226, 0.25) !important;
+            background: rgba(138, 43, 226, 0.3) !important;
+            backdrop-filter: blur(10px);
         }
         
         body.space-theme .bg-zinc-950 {
-            background: #1a0f2e !important;
+            background: rgba(26, 15, 46, 0.9) !important;
+            backdrop-filter: blur(10px);
         }
         
         body.space-theme .day-cell:not(.work) {
-            background: rgba(138, 43, 226, 0.2);
-            border-color: rgba(138, 43, 226, 0.4);
+            background: rgba(138, 43, 226, 0.25);
+            border-color: rgba(138, 43, 226, 0.5);
             color: #e0d4ff;
+            backdrop-filter: blur(5px);
         }
         
         body.space-theme .day-cell.work {
             background: linear-gradient(135deg, #8b5cf6, #6366f1);
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.8), 0 0 40px rgba(99, 102, 241, 0.5);
         }
 
         /* Spring theme */
@@ -738,6 +765,21 @@
             100% { 
                 transform: translate3d(calc(100vw + 100px), calc(100vh + 100px), 0) rotate(45deg);
                 opacity: 0;
+            }
+        }
+
+        @keyframes nebulaPulse {
+            0%, 100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.6;
+            }
+            33% {
+                transform: scale(1.2) rotate(120deg);
+                opacity: 0.8;
+            }
+            66% {
+                transform: scale(0.9) rotate(240deg);
+                opacity: 0.5;
             }
         }
 
@@ -4410,6 +4452,55 @@
             container.appendChild(testDiv);
             
             if (theme === 'space') {
+                // Create animated nebula background
+                const nebula1 = document.createElement('div');
+                nebula1.style.cssText = `
+                    position: absolute;
+                    width: 800px;
+                    height: 800px;
+                    background: radial-gradient(ellipse at center, rgba(138, 43, 226, 0.3) 0%, rgba(99, 102, 241, 0.2) 30%, transparent 70%);
+                    top: -200px;
+                    left: -200px;
+                    animation: nebulaPulse 15s ease-in-out infinite;
+                    filter: blur(60px);
+                    z-index: 1;
+                    pointer-events: none;
+                `;
+                container.appendChild(nebula1);
+                
+                const nebula2 = document.createElement('div');
+                nebula2.style.cssText = `
+                    position: absolute;
+                    width: 600px;
+                    height: 600px;
+                    background: radial-gradient(ellipse at center, rgba(236, 72, 153, 0.25) 0%, rgba(139, 92, 246, 0.15) 30%, transparent 70%);
+                    bottom: -150px;
+                    right: -150px;
+                    animation: nebulaPulse 18s ease-in-out infinite;
+                    animation-delay: 5s;
+                    filter: blur(50px);
+                    z-index: 1;
+                    pointer-events: none;
+                `;
+                container.appendChild(nebula2);
+                
+                const nebula3 = document.createElement('div');
+                nebula3.style.cssText = `
+                    position: absolute;
+                    width: 500px;
+                    height: 500px;
+                    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.3) 0%, rgba(138, 43, 226, 0.2) 40%, transparent 70%);
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    animation: nebulaPulse 20s ease-in-out infinite;
+                    animation-delay: 10s;
+                    filter: blur(70px);
+                    z-index: 1;
+                    pointer-events: none;
+                `;
+                container.appendChild(nebula3);
+                
                 // Create LARGE visible stars
                 for (let i = 0; i < 100; i++) {
                     const star = document.createElement('div');
@@ -4425,7 +4516,7 @@
                         box-shadow: 0 0 ${size * 2}px rgba(255, 255, 255, 0.8);
                         animation: starTwinkle ${Math.random() * 3 + 2}s ease-in-out infinite;
                         animation-delay: ${Math.random() * 2}s;
-                        z-index: 1;
+                        z-index: 3;
                         pointer-events: none;
                     `;
                     container.appendChild(star);
@@ -4442,14 +4533,14 @@
                         box-shadow: 0 0 25px rgba(139, 92, 246, 1), 0 0 50px rgba(139, 92, 246, 0.5);
                         animation: cometFly ${8 + i * 2}s linear infinite;
                         animation-delay: ${i * 3}s;
-                        z-index: 2;
+                        z-index: 4;
                         pointer-events: none;
                         border-radius: 50%;
                     `;
                     container.appendChild(comet);
                 }
                 
-                console.log('Space theme animations created: 100 stars + 3 comets');
+                console.log('Space theme animations created: 3 nebulas + 100 stars + 3 comets');
             } else if (theme === 'spring') {
                 // Falling petals
                 for (let i = 0; i < 15; i++) {
