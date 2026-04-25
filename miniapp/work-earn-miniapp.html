@@ -916,7 +916,7 @@
 </head>
 <body class="bg-zinc-950 text-zinc-200">
     <!-- Theme Animations Container -->
-    <div id="theme-animations" class="fixed inset-0 pointer-events-none" style="z-index: 0;"></div>
+    <div id="theme-animations" class="fixed inset-0 pointer-events-none" style="z-index: 999;"></div>
     
     <!-- Phone frame -->
     <div class="max-w-[420px] mx-auto min-h-screen bg-zinc-900 shadow-2xl overflow-hidden flex flex-col mini-app">
@@ -4384,40 +4384,142 @@
 
         function renderThemeAnimations(theme) {
             const container = document.getElementById('theme-animations');
-            if (!container) return;
+            if (!container) {
+                console.error('Theme animations container not found!');
+                return;
+            }
             
             container.innerHTML = '';
+            console.log('Rendering animations for theme:', theme);
+            
+            // Add test indicator
+            const testDiv = document.createElement('div');
+            testDiv.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: rgba(255, 0, 0, 0.5);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 5px;
+                z-index: 9999;
+                font-size: 12px;
+                pointer-events: none;
+            `;
+            testDiv.textContent = `Theme: ${theme} | Animations: ON`;
+            container.appendChild(testDiv);
             
             if (theme === 'space') {
-                // Create stars
-                for (let i = 0; i < 50; i++) {
+                // Create LARGE visible stars
+                for (let i = 0; i < 100; i++) {
                     const star = document.createElement('div');
+                    const size = Math.random() * 4 + 2; // 2-6px
                     star.style.cssText = `
                         position: absolute;
-                        width: ${Math.random() * 3 + 1}px;
-                        height: ${Math.random() * 3 + 1}px;
-                        background: white;
+                        width: ${size}px;
+                        height: ${size}px;
+                        background: rgba(255, 255, 255, ${Math.random() * 0.6 + 0.4});
                         border-radius: 50%;
                         top: ${Math.random() * 100}%;
                         left: ${Math.random() * 100}%;
-                        opacity: ${Math.random() * 0.5 + 0.3};
+                        box-shadow: 0 0 ${size * 2}px rgba(255, 255, 255, 0.8);
                         animation: starTwinkle ${Math.random() * 3 + 2}s ease-in-out infinite;
                         animation-delay: ${Math.random() * 2}s;
+                        z-index: 1;
+                        pointer-events: none;
                     `;
                     container.appendChild(star);
                 }
                 
-                // Create comet
-                const comet = document.createElement('div');
-                comet.style.cssText = `
+                // Create multiple comets
+                for (let i = 0; i < 3; i++) {
+                    const comet = document.createElement('div');
+                    comet.style.cssText = `
+                        position: absolute;
+                        width: 6px;
+                        height: 150px;
+                        background: linear-gradient(to bottom, transparent, rgba(139, 92, 246, 1), rgba(99, 102, 241, 0.8), transparent);
+                        box-shadow: 0 0 25px rgba(139, 92, 246, 1), 0 0 50px rgba(139, 92, 246, 0.5);
+                        animation: cometFly ${8 + i * 2}s linear infinite;
+                        animation-delay: ${i * 3}s;
+                        z-index: 2;
+                        pointer-events: none;
+                        border-radius: 50%;
+                    `;
+                    container.appendChild(comet);
+                }
+                
+                console.log('Space theme animations created: 100 stars + 3 comets');
+            } else if (theme === 'spring') {
+                // Falling petals
+                for (let i = 0; i < 15; i++) {
+                    const petal = document.createElement('div');
+                    petal.textContent = '🌸';
+                    petal.style.cssText = `
+                        position: absolute;
+                        font-size: ${Math.random() * 15 + 20}px;
+                        left: ${Math.random() * 100}%;
+                        top: -50px;
+                        animation: petalFall ${Math.random() * 5 + 8}s linear infinite;
+                        animation-delay: ${Math.random() * 5}s;
+                        z-index: 1;
+                        pointer-events: none;
+                        opacity: 0.8;
+                    `;
+                    container.appendChild(petal);
+                }
+            } else if (theme === 'summer') {
+                // Sun rays
+                const sunRay = document.createElement('div');
+                sunRay.style.cssText = `
                     position: absolute;
-                    width: 4px;
-                    height: 120px;
-                    background: linear-gradient(to bottom, transparent, rgba(139, 92, 246, 0.9), transparent);
-                    box-shadow: 0 0 15px rgba(139, 92, 246, 0.8);
-                    animation: cometFly 8s linear infinite;
+                    width: 600px;
+                    height: 600px;
+                    background: radial-gradient(circle, rgba(251, 146, 60, 0.4), transparent 70%);
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    animation: summerGlare 6s ease-in-out infinite;
+                    z-index: 1;
+                    pointer-events: none;
                 `;
-                container.appendChild(comet);
+                container.appendChild(sunRay);
+            } else if (theme === 'autumn') {
+                // Falling leaves
+                for (let i = 0; i < 12; i++) {
+                    const leaf = document.createElement('div');
+                    leaf.textContent = '🍂';
+                    leaf.style.cssText = `
+                        position: absolute;
+                        font-size: ${Math.random() * 15 + 25}px;
+                        left: ${Math.random() * 100}%;
+                        top: -50px;
+                        animation: leafFall ${Math.random() * 5 + 10}s ease-in-out infinite;
+                        animation-delay: ${Math.random() * 6}s;
+                        z-index: 1;
+                        pointer-events: none;
+                        opacity: 0.9;
+                    `;
+                    container.appendChild(leaf);
+                }
+            } else if (theme === 'winter') {
+                // Falling snow
+                for (let i = 0; i < 20; i++) {
+                    const snow = document.createElement('div');
+                    snow.textContent = '❄️';
+                    snow.style.cssText = `
+                        position: absolute;
+                        font-size: ${Math.random() * 10 + 18}px;
+                        left: ${Math.random() * 100}%;
+                        top: -50px;
+                        animation: snowFall ${Math.random() * 4 + 6}s linear infinite;
+                        animation-delay: ${Math.random() * 4}s;
+                        z-index: 1;
+                        pointer-events: none;
+                        opacity: 0.9;
+                    `;
+                    container.appendChild(snow);
+                }
             }
         }
 
