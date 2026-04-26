@@ -6,11 +6,11 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>💰 Календарь Заработка • Mini App v5.0</title>
-    <script src="https://telegram.org/js/telegram-web-app.js?v=5.0"></script>
-    <script src="https://cdn.tailwindcss.com?v=5.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js?v=5.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js?v=5.0"></script>
+    <title>💰 Календарь Заработка • Mini App v6.0</title>
+    <script src="https://telegram.org/js/telegram-web-app.js?v=6.0"></script>
+    <script src="https://cdn.tailwindcss.com?v=6.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js?v=6.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js?v=6.0"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
         
@@ -33,10 +33,11 @@
         }
         
         .day-cell.work {
-            background: linear-gradient(135deg, #10b981, #14b8a6);
-            color: white;
-            box-shadow: 0 0 30px rgba(16, 185, 129, 0.8), 0 10px 15px -3px rgb(16 185 129 / 0.5);
-            border: 2px solid rgba(16, 185, 129, 0.6);
+            background: linear-gradient(135deg, #10b981, #14b8a6) !important;
+            color: white !important;
+            box-shadow: 0 0 40px rgba(16, 185, 129, 1), 0 0 60px rgba(20, 184, 166, 0.8), 0 10px 20px rgba(16, 185, 129, 0.6) !important;
+            border: 3px solid #10b981 !important;
+            font-weight: 700 !important;
         }
         
         .day-cell:hover:not(.work) {
@@ -238,8 +239,10 @@
         
         body.space-theme .day-cell.work {
             background: linear-gradient(135deg, #10b981, #14b8a6) !important;
-            box-shadow: 0 0 30px rgba(16, 185, 129, 1), 0 0 50px rgba(20, 184, 166, 0.6) !important;
-            border: 2px solid rgba(16, 185, 129, 0.8) !important;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 1), 0 0 70px rgba(20, 184, 166, 1), 0 10px 25px rgba(16, 185, 129, 0.8) !important;
+            border: 3px solid #10b981 !important;
+            color: white !important;
+            font-weight: 700 !important;
         }
 
         /* Spring theme */
@@ -310,8 +313,10 @@
         
         body.spring-theme .day-cell.work {
             background: linear-gradient(135deg, #10b981, #14b8a6) !important;
-            box-shadow: 0 0 30px rgba(16, 185, 129, 1), 0 0 50px rgba(20, 184, 166, 0.6) !important;
-            border: 2px solid rgba(16, 185, 129, 0.8) !important;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 1), 0 0 70px rgba(20, 184, 166, 1), 0 10px 25px rgba(16, 185, 129, 0.8) !important;
+            border: 3px solid #10b981 !important;
+            color: white !important;
+            font-weight: 700 !important;
         }
 
         /* Summer theme */
@@ -382,8 +387,10 @@
         
         body.summer-theme .day-cell.work {
             background: linear-gradient(135deg, #10b981, #14b8a6) !important;
-            box-shadow: 0 0 30px rgba(16, 185, 129, 1), 0 0 50px rgba(20, 184, 166, 0.6) !important;
-            border: 2px solid rgba(16, 185, 129, 0.8) !important;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 1), 0 0 70px rgba(20, 184, 166, 1), 0 10px 25px rgba(16, 185, 129, 0.8) !important;
+            border: 3px solid #10b981 !important;
+            color: white !important;
+            font-weight: 700 !important;
         }
 
         /* Autumn theme */
@@ -454,8 +461,10 @@
         
         body.autumn-theme .day-cell.work {
             background: linear-gradient(135deg, #10b981, #14b8a6) !important;
-            box-shadow: 0 0 30px rgba(16, 185, 129, 1), 0 0 50px rgba(20, 184, 166, 0.6) !important;
-            border: 2px solid rgba(16, 185, 129, 0.8) !important;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 1), 0 0 70px rgba(20, 184, 166, 1), 0 10px 25px rgba(16, 185, 129, 0.8) !important;
+            border: 3px solid #10b981 !important;
+            color: white !important;
+            font-weight: 700 !important;
         }
 
         /* Winter theme */
@@ -527,8 +536,10 @@
         
         body.winter-theme .day-cell.work {
             background: linear-gradient(135deg, #10b981, #14b8a6) !important;
-            box-shadow: 0 0 30px rgba(16, 185, 129, 1), 0 0 50px rgba(20, 184, 166, 0.6) !important;
-            border: 2px solid rgba(16, 185, 129, 0.8) !important;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 1), 0 0 70px rgba(20, 184, 166, 1), 0 10px 25px rgba(16, 185, 129, 0.8) !important;
+            border: 3px solid #10b981 !important;
+            color: white !important;
+            font-weight: 700 !important;
         }
 
         body.space-theme input,
