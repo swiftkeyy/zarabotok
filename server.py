@@ -17,6 +17,10 @@ class MyHandler(SimpleHTTPRequestHandler):
         path = path.split('?', 1)[0]
         path = path.split('#', 1)[0]
         
+        # Админ-панель
+        if path == '/admin' or path == '/admin/':
+            return str(Path('miniapp/admin.html').resolve())
+        
         # Если путь начинается с /miniapp/, берём файл из папки miniapp/
         if path.startswith('/miniapp/'):
             # Убираем /miniapp/ из пути
@@ -66,5 +70,6 @@ if __name__ == "__main__":
     server = HTTPServer(("0.0.0.0", PORT), MyHandler)
     print(f"🌐 HTTP сервер запущен на порту {PORT}")
     print(f"📂 Маршрут /miniapp/* → папка miniapp/")
+    print(f"🛠️ Админ-панель доступна на /admin")
     print(f"🔄 Проксирование /api/* → localhost:{API_PORT}")
     server.serve_forever()

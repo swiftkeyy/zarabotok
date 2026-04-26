@@ -106,6 +106,38 @@ async def init_db():
                     added_at TIMESTAMP
                 )
             """)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS goals (
+                    id SERIAL PRIMARY KEY,
+                    user_id BIGINT,
+                    goal_type TEXT,
+                    amount INTEGER,
+                    enabled BOOLEAN DEFAULT true,
+                    created_at TIMESTAMP,
+                    UNIQUE(user_id, goal_type)
+                )
+            """)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS day_tags (
+                    id SERIAL PRIMARY KEY,
+                    user_id BIGINT,
+                    date TEXT,
+                    tag TEXT,
+                    created_at TIMESTAMP,
+                    UNIQUE(user_id, date, tag)
+                )
+            """)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS day_comments (
+                    id SERIAL PRIMARY KEY,
+                    user_id BIGINT,
+                    date TEXT,
+                    comment TEXT,
+                    created_at TIMESTAMP,
+                    updated_at TIMESTAMP,
+                    UNIQUE(user_id, date)
+                )
+            """)
         logger.info(f"✅ {logger_msg} база готова")
     else:
         # SQLite (bothost.ru)
@@ -139,6 +171,38 @@ async def init_db():
                     title TEXT,
                     added_by INTEGER,
                     added_at TEXT
+                )
+            """)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS goals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    goal_type TEXT,
+                    amount INTEGER,
+                    enabled INTEGER DEFAULT 1,
+                    created_at TEXT,
+                    UNIQUE(user_id, goal_type)
+                )
+            """)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS day_tags (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    date TEXT,
+                    tag TEXT,
+                    created_at TEXT,
+                    UNIQUE(user_id, date, tag)
+                )
+            """)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS day_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    date TEXT,
+                    comment TEXT,
+                    created_at TEXT,
+                    updated_at TEXT,
+                    UNIQUE(user_id, date)
                 )
             """)
             await db.commit()
